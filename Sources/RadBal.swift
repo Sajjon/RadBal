@@ -1,8 +1,9 @@
 import Foundation
+import BigDecimal
 
 /// Held tokens for any account worth less than this threshold will not be displayed or
 /// added to the aggregate worth of the profile. aka. "shitcoin filter".
-let thresholdValueInUSD: Number = 500
+let thresholdValueInUSD = BigDecimal(500)
 
 @main
 public struct RadBal {
@@ -11,13 +12,15 @@ public struct RadBal {
 		profile profilePath: String,
 		optional: Bool = false
 	) async throws -> ProfileFetched {
-		guard let profileData = FileManager.default.contents(atPath: profilePath) else {
-			if !optional {
-				print("Missing '\(profilePath)', create the file and place it in the root of the project.")
-			}
-			struct MissingFile: Error {}
-			throw MissingFile()
-		}
+		let url: URL = FileManager.default.homeDirectoryForCurrentUser.appending(path: profilePath)
+		let profileData = try Data(contentsOf: url)
+//		guard let profileData = FileManager.default.contents(atPath: profilePath) else {
+//			if !optional {
+//				print("Missing '\(profilePath)', create the file and place it in the root of the project.")
+//			}
+//			struct MissingFile: Error {}
+//			throw MissingFile()
+//		}
 		let jsonDecoder = JSONDecoder()
 		jsonDecoder.dateDecodingStrategy = .iso8601
 		let profile = try jsonDecoder.decode(Profile.self, from: profileData)

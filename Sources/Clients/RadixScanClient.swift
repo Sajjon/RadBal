@@ -6,9 +6,10 @@
 //
 
 import Foundation
+import BigDecimal
 
 struct Prices: Decodable, Equatable {
-	let Ociswap: Dictionary<String, Number>
+	let Ociswap: Dictionary<String, Double>
 }
 
 actor PricesCacheActor: GlobalActor {
@@ -17,15 +18,21 @@ actor PricesCacheActor: GlobalActor {
 	static let shared = PricesCacheActor()
 	func cache(_ prices: Prices) {
 		self.cached = prices
+		
 		print("\n\n\n\n\n\n🔮🔮🔮🔮🔮🔮🔮🔮🔮\n\nprices: \(prices)")
+	}
+	
+}
+
+extension Prices {
+	var xrdInUSD: Double {
+		self.Ociswap[xrd]!
 	}
 }
 
 enum RadixScanClient {}
 extension RadixScanClient {
-	private static func xrdValueInUSD() async -> Number {
-		try! await Self.price(of: xrd)!.inUSD
-	}
+
 	private static let baseURL = "https://www.radixscan.io/raw/tokenprices/"
 	
 	private static func _prices(of rris: [String]) async throws -> Prices {
@@ -54,7 +61,6 @@ extension RadixScanClient {
 	static func prices(
 		of rris: [String]
 	) async throws -> [PriceInfo] {
-		let xrdInUSD = await Self.xrdValueInUSD()
 		let prices = try await _prices(of: rris)
 		return rris.compactMap { rri -> PriceInfo? in
 			guard let value = prices.Ociswap[rri] else {
@@ -62,8 +68,8 @@ extension RadixScanClient {
 			}
 			return PriceInfo(
 				rri: rri,
-				inUSD: value,
-				inXRD: value / xrdInUSD
+				inUSD: BigDecimal(value),
+				inXRD: BigDecimal(value / prices.xrdInUSD)
 			)
 		}
 		

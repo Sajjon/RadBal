@@ -6,19 +6,20 @@
 //
 
 import Foundation
+import BigDecimal
 
 struct ProfileFetched: CustomStringConvertible {
 	struct Account: Hashable {
 		
 		let account: Profile.Account
-		let xrdLiquid: Number
-		let xrdStaked: Number
+		let xrdLiquid: BigDecimal
+		let xrdStaked: BigDecimal
 		let altcoinBalances: [AltcoinBalance]
 
 		init(
 			account: Profile.Account,
-			xrdLiquid: Number,
-			xrdStaked: Number,
+			xrdLiquid: BigDecimal,
+			xrdStaked: BigDecimal,
 			altcoinBalances: [AltcoinBalance]
 		) {
 			precondition(altcoinBalances.allSatisfy({ $0.worthInUSD >= thresholdValueInUSD }))
@@ -39,11 +40,11 @@ struct ProfileFetched: CustomStringConvertible {
 	/// All accounts associated with this profile/wallet.
 	let accounts: [Account]
 	
-	var xrdLiquid: Number {
-		accounts.reduce(0) { $0 + $1.xrdLiquid }
+	var xrdLiquid: BigDecimal {
+		accounts.reduce(BigDecimal(0)) { $0 + $1.xrdLiquid }
 	}
-	var xrdStaked: Number {
-		accounts.reduce(0) { $0 + $1.xrdStaked }
+	var xrdStaked: BigDecimal {
+		accounts.reduce(BigDecimal(0)) { $0 + $1.xrdStaked }
 	}
 	
 	var detailed: String {

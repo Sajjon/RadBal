@@ -6,11 +6,11 @@
 //
 
 import Foundation
+import BigDecimal
 
-typealias Number = Double
 
 struct PriceInfo: Hashable {
 	let rri: String
-	let inUSD: Number
-	let inXRD: Number
+	let inUSD: BigDecimal
+	let inXRD: BigDecimal
 }

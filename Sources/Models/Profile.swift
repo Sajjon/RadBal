@@ -6,6 +6,7 @@
 //
 
 import Foundation
+import BigDecimal
 
 struct Profile: Decodable {
 	
@@ -46,19 +47,20 @@ struct Profile: Decodable {
 			
 			/// Number of altcoins bought, base 10, as a string
 			let altcoinAmountString: String
-			var altcoinAmount: Number {
+			var altcoinAmount: BigDecimal {
 //				.init(altcoinAmountString, radix: 10)!
-				Number(altcoinAmountString)!
+//				Number(altcoinAmountString)!
+				BigDecimal(altcoinAmountString)
 			}
 			
 			/// Number of XRDs sold, base 10, as a string
 			let xrdAmountSpentString: String
-			var xrdAmountSpent: Number {
+			var xrdAmountSpent: BigDecimal {
 //				.init(xrdAmountSpentString, radix: 10)!
-				Number(xrdAmountSpentString)!
+				BigDecimal(xrdAmountSpentString)
 			}
 			
-			var priceInXRD: Number {
+			var priceInXRD: BigDecimal {
 //				Double(xrdAmountSpent) / Double(altcoinAmount)
 				xrdAmountSpent / altcoinAmount
 			}

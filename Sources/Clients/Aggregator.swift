@@ -6,13 +6,14 @@
 //
 
 import Foundation
-
+import BigDecimal
 
 enum Aggregator {}
 extension Aggregator {
 	
 	
 	static func detailedAccountInfo(_ account: Profile.Account) async throws -> ProfileFetched.Account {
+		print("account: \(account)")
 		let tokenBalances = try await RadixDLTGateway.getBalanceOfAccount(address: account.address)
 		
 		guard !tokenBalances.altCoinsBalances.isEmpty else {

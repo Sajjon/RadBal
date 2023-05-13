@@ -6,11 +6,12 @@
 //
 
 import Foundation
+import BigDecimal
 
 struct TokenBalance {
 	let account: String
-	let xrdLiquid: Number
-	let xrdStaked: Number
+	let xrdLiquid: BigDecimal
+	let xrdStaked: BigDecimal
 	let altCoinsBalances: [TokenAmount]
 	
 	init(
@@ -20,19 +21,19 @@ struct TokenBalance {
 		self.account = account
 		
 		self.xrdLiquid = try portfolio
-			.account_balances
-			.liquid_balances
+			.balances
+			.liquidBalances
 			.compactMap {
-				guard $0.token_identifier.isXRD else { return nil }
+				guard $0.isXRD else { return nil }
 				return try $0.amount()
 			}
-			.reduce(0, +)
+			.reduce(BigDecimal(0), +)
 
 		self.xrdStaked = try portfolio
-			.account_balances
-			.staked_and_unstaking_balance
+			.balances
+			.stakedAndUnstakingBalance
 			.amount()
 		
-		self.altCoinsBalances = portfolio.account_balances.liquid_balances.filter { !$0.token_identifier.isXRD }
+		self.altCoinsBalances = portfolio.balances.liquidBalances.filter { !$0.isXRD }
 	}
 }

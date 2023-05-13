@@ -6,9 +6,10 @@
 //
 
 import Foundation
+import BigDecimal
 
 struct AltcoinBalance: Hashable {
-	let balance: Number
+	let balance: BigDecimal
 	let price: PriceInfo
 	let tokenInfo: TokenInfo
 	let purchase: Profile.Account.Trade?
@@ -16,15 +17,15 @@ struct AltcoinBalance: Hashable {
 
 extension AltcoinBalance {
 	
-	var worthInUSD: Number {
+	var worthInUSD: BigDecimal {
 		balance * price.inUSD
 	}
 	
-	var worthInXRD: Number {
+	var worthInXRD: BigDecimal {
 		balance * price.inXRD
 	}
 	
-	var returnOnInvestment: Number? {
+	var returnOnInvestment: BigDecimal? {
 		guard let purchase else { return nil }
 		return worthInUSD / purchase.priceInXRD
 	}

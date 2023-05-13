@@ -17,10 +17,13 @@ public struct RadBal {
 	}
 	
 	public static func main() async throws {
+		let separator = "~~~ √  Radix Aggregated Balances √ ~~~"
+		print("\n\n\n" + separator)
 		let legacy = try await aggregate(list: ".accounts_legacy.json")
-		print("Legacy accounts:\n\(legacy.summary)")
+		print("\nLEGACY:\n\(legacy.summary)")
 		let babylonReady = try await aggregate(list: ".accounts.json")
-		print("Babylon Ready:\n\(babylonReady.summary)")
+		print("\nBABYLON:\n\(babylonReady.summary)")
+		print(separator + "\n\n\n")
 	}
 }
 					

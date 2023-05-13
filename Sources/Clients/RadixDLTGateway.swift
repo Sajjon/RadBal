@@ -6,7 +6,6 @@
 //
 
 import Foundation
-import BigInt
 
 struct FailedToFetchNotHTTPURLResponse: Swift.Error {}
 struct FailedToFetchBadStatusCode: Swift.Error {

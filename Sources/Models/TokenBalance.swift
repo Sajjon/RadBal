@@ -6,12 +6,12 @@
 //
 
 import Foundation
-import BigInt
 
 struct TokenBalance {
 	let account: String
-	let xrdLiquid: BigInt
-	let xrdStaked: BigInt
+	let xrdLiquid: Number
+	let xrdStaked: Number
+	let altCoinsBalances: [TokenAmount]
 	
 	init(
 		account: String,
@@ -26,11 +26,13 @@ struct TokenBalance {
 				guard $0.token_identifier.isXRD else { return nil }
 				return try $0.amount()
 			}
-			.reduce(BigInt.zero, +)
+			.reduce(0, +)
 
 		self.xrdStaked = try portfolio
 			.account_balances
 			.staked_and_unstaking_balance
 			.amount()
+		
+		self.altCoinsBalances = portfolio.account_balances.liquid_balances.filter { !$0.token_identifier.isXRD }
 	}
 }

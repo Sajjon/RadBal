@@ -6,26 +6,30 @@
 //
 
 import Foundation
-import BigInt
 
-struct ProfileFetched {
+struct ProfileFetched: CustomStringConvertible {
 	struct Account: Hashable {
 		
 		let account: Profile.Account
-		let xrdLiquid: BigInt
-		let xrdStaked: BigInt
-		let altcoins: [Altcoin]
-		
+		let xrdLiquid: Number
+		let xrdStaked: Number
+		let altcoinBalances: [AltcoinBalance]
+
 		init(
-			xrdBalance: TokenBalance,
 			account: Profile.Account,
-			altcoins: [Altcoin] = []
+			xrdLiquid: Number,
+			xrdStaked: Number,
+			altcoinBalances: [AltcoinBalance]
 		) {
-			precondition(xrdBalance.account == account.address)
+			precondition(altcoinBalances.allSatisfy({ $0.worthInUSD >= thresholdValueInUSD }))
 			self.account = account
-			self.xrdLiquid = xrdBalance.xrdLiquid
-			self.xrdStaked = xrdBalance.xrdStaked
-			self.altcoins = altcoins
+			self.xrdLiquid = xrdLiquid
+			self.xrdStaked = xrdStaked
+			self.altcoinBalances = altcoinBalances
+		}
+		
+		var detailed: String {
+			"Account: \(account):\n\(altcoinBalances.map(\.detailed).joined(separator: "\n"))"
 		}
 	}
 	
@@ -35,20 +39,27 @@ struct ProfileFetched {
 	/// All accounts associated with this profile/wallet.
 	let accounts: [Account]
 	
-	var xrdLiquid: BigInt {
-		accounts.reduce(BigInt.zero) { $0 + $1.xrdLiquid }
+	var xrdLiquid: Number {
+		accounts.reduce(0) { $0 + $1.xrdLiquid }
 	}
-	var xrdStaked: BigInt {
-		accounts.reduce(BigInt.zero) { $0 + $1.xrdStaked }
+	var xrdStaked: Number {
+		accounts.reduce(0) { $0 + $1.xrdStaked }
 	}
 	
-	var summary: String {
+	var detailed: String {
+		accounts
+			.map(\.detailed)
+			.joined(separator: "\n")
+	}
+	
+	var description: String {
 		"""
 		Profile: '\(name)'
 		XRD Grand Total: \(xrdLiquid + xrdStaked)
 			available: \(xrdLiquid)
 			staked: \(xrdStaked)
 		#\(accounts.count) accounts
+		Detailed: \(detailed)
 		"""
 	}
 }

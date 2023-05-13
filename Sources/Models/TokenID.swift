@@ -7,7 +7,7 @@
 
 import Foundation
 
-private let xrd = "xrd_rr1qy5wfsfh"
+let xrd = "xrd_rr1qy5wfsfh"
 
 struct TokenID: Decodable {
 	let rri: String

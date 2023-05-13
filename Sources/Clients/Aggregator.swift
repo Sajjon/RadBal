@@ -6,34 +6,59 @@
 //
 
 import Foundation
-import BigInt
+
 
 enum Aggregator {}
 extension Aggregator {
 	
+	
 	static func detailedAccountInfo(_ account: Profile.Account) async throws -> ProfileFetched.Account {
-		let xrdBalance = try await RadixDLTGateway.getBalanceOfAccount(address: account.address)
-		return .init(xrdBalance: xrdBalance, account: account, altcoins: [])
+		let tokenBalances = try await RadixDLTGateway.getBalanceOfAccount(address: account.address)
+		
+		guard !tokenBalances.altCoinsBalances.isEmpty else {
+			return ProfileFetched.Account(
+				account: account,
+				xrdLiquid: tokenBalances.xrdLiquid,
+				xrdStaked: tokenBalances.xrdStaked,
+				altcoinBalances: []
+			)
+		}
+		
+		let altcoinBalances: [AltcoinBalance] = try await tokenBalances
+			.altCoinsBalances
+			.asyncCompactMap { altcoinBalanceSimple -> AltcoinBalance? in
+				let rri = altcoinBalanceSimple.rri
+				guard let price = try await RadixScanClient.price(of: rri) else {
+					return nil
+				}
+				let tokenInfo = try await RadixScanClient.info(of: rri)
+				
+				return try AltcoinBalance(
+					balance: altcoinBalanceSimple.amount(),
+					price: price,
+					tokenInfo: tokenInfo,
+					purchase: account.trades?.first(where: { $0.rri == rri })
+				)
+			}
+		
+		let fetchedAccount = ProfileFetched.Account(
+			account: account,
+			xrdLiquid: tokenBalances.xrdLiquid,
+			xrdStaked: tokenBalances.xrdStaked,
+			altcoinBalances: altcoinBalances.filter { $0.worthInXRD >= thresholdValueInUSD }
+		)
+		print("done: \(fetchedAccount)")
+		return fetchedAccount
 	}
 	
 	static func of(profile: Profile) async throws -> ProfileFetched {
+		let accounts = try await profile.accounts.asyncMap { try await Self.detailedAccountInfo($0) }
 		
-		try await withThrowingTaskGroup(of: ProfileFetched.Account.self, returning: ProfileFetched.self) { group in
-			var accountsFetched: Set<ProfileFetched.Account> = []
-			for account in profile.accounts {
-				_ = group.addTaskUnlessCancelled {
-					try await Self.detailedAccountInfo(account)
-				}
-			}
-			for try await fetchedAccount in group {
-				accountsFetched.insert(fetchedAccount)
-			}
-	
-			return ProfileFetched(
-				name: profile.name,
-				accounts: Array(accountsFetched)
-			)
-		}
+		return ProfileFetched(
+			name: profile.name,
+			accounts: accounts
+		)
+		
 	}
 	
 }

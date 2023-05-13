@@ -6,17 +6,19 @@
 //
 
 import Foundation
-import BigInt
 
 struct TokenAmount: Decodable {
 	let value: String
-	func amount() throws -> BigInt {
-		guard let whole = BigInt(value.dropLast(18), radix: 10) else {
+	func amount() throws -> Number {
+		guard let whole = Number(value.dropLast(18)) else {
 			throw FailedToConvertFromAttos()
 		}
 		return whole
 	}
 	let token_identifier: TokenID
+	var rri: String {
+		token_identifier.rri
+	}
 }
 
 struct Portfolio: Decodable {

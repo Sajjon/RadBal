@@ -7,7 +7,10 @@
 
 import Foundation
 
-struct PriceInfo {
+typealias Number = Double
+
+struct PriceInfo: Hashable {
 	let rri: String
-	let usdValue: Float
+	let inUSD: Number
+	let inXRD: Number
 }

@@ -1,5 +1,8 @@
 import Foundation
-import BigInt
+
+/// Held tokens for any account worth less than this threshold will not be displayed or
+/// added to the aggregate worth of the profile. aka. "shitcoin filter".
+let thresholdValueInUSD: Number = 500
 
 @main
 public struct RadBal {
@@ -23,12 +26,12 @@ public struct RadBal {
 	
 	public static func main() async throws {
 		let separator = "~~~ √  Radix Aggregated Balances √ ~~~"
-		print("\n\n\n" + separator)
-		if let legacy = try? await aggregate(profile: ".profile.legacy.json", optional: true) {
-			print("\nLEGACY:\n\(legacy.summary)\n")
-		}
+//		print("\n\n\n" + separator)
+//		if let legacy = try? await aggregate(profile: ".profile.legacy.json", optional: true) {
+//			print("\nLEGACY:\n\(legacy)\n")
+//		}
 		let babylonReady = try await aggregate(profile: ".profile.json")
-		print("BABYLON:\n\(babylonReady.summary)")
+		print("BABYLON:\n\(babylonReady)")
 		print(separator + "\n\n\n")
 	}
 }

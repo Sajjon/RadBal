@@ -7,12 +7,34 @@
 
 import Foundation
 
-struct Altcoin: Hashable {
+struct AltcoinBalance: Hashable {
+	let balance: Number
+	let price: PriceInfo
 	let tokenInfo: TokenInfo
-	let priceInXRD: Double
-	var returnOnInvestment: Double? {
-		guard let purchase else { return nil }
-		return priceInXRD / purchase.priceInXRD
-	}
 	let purchase: Profile.Account.Trade?
+}
+
+extension AltcoinBalance {
+	
+	var worthInUSD: Number {
+		balance * price.inUSD
+	}
+	
+	var worthInXRD: Number {
+		balance * price.inXRD
+	}
+	
+	var returnOnInvestment: Number? {
+		guard let purchase else { return nil }
+		return worthInUSD / purchase.priceInXRD
+	}
+	
+	var detailed: String {
+		let exclRoi = "\(tokenInfo.symbol): \(balance) => XRD: \(worthInUSD)"
+		guard let roi = returnOnInvestment else {
+			return exclRoi
+		}
+		
+		return exclRoi + " | ROI: \(roi)"
+	}
 }

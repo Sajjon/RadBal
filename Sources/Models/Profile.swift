@@ -16,7 +16,7 @@ struct Profile: Decodable {
 	/// All accounts associated with this profile/wallet.
 	let accounts: [Account]
 	
-	struct Account: Decodable {
+	struct Account: Decodable, Hashable {
 		
 		/// HD Index
 		let index: Int
@@ -29,7 +29,7 @@ struct Profile: Decodable {
 		
 		let trades: [Trade]?
 		
-		struct Trade: Decodable {
+		struct Trade: Decodable, Hashable {
 			/// Radix Resource Identifier of the shitcoin bought
 			let rri: String
 			
@@ -43,6 +43,10 @@ struct Profile: Decodable {
 			/// Number of XRDs sold, base 10, as a string
 			let xrdAmountSpentString: String
 			var xrdAmountSpent: BigInt { .init(xrdAmountSpentString, radix: 10)! }
+			
+			var priceInXRD: Double {
+				Double(xrdAmountSpent) / Double(altcoinAmount)
+			}
 			
 			/// Date the trade took place
 			let purchaseDate: Date

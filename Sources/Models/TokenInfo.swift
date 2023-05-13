@@ -7,7 +7,7 @@
 
 import Foundation
 
-struct TokenInfo: Decodable, Equatable {
+struct TokenInfo: Decodable, Hashable {
 	let tokenInfoURL: String // "https://caviarnine.com/",
 	let symbol: String
 	let isSupplyMutable: Bool

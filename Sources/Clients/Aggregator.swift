@@ -11,20 +11,27 @@ import BigInt
 enum Aggregator {}
 extension Aggregator {
 	
-	static func of(profile: Profile) async throws -> Aggregate {
+	static func detailedAccountInfo(_ account: Profile.Account) async throws -> ProfileFetched.Account {
+		let xrdBalance = try await RadixDLTGateway.getBalanceOfAccount(address: account.address)
+		return .init(xrdBalance: xrdBalance, account: account, altcoins: [])
+	}
+	
+	static func of(profile: Profile) async throws -> ProfileFetched {
 		
-		try await withThrowingTaskGroup(of: TokenBalance.self, returning: Aggregate.self) { group in
-			for account in profile.accounts.map(\.address) {
+		try await withThrowingTaskGroup(of: ProfileFetched.Account.self, returning: ProfileFetched.self) { group in
+			var accountsFetched: Set<ProfileFetched.Account> = []
+			for account in profile.accounts {
 				_ = group.addTaskUnlessCancelled {
-					try await RadixDLTGateway.getBalanceOfAccount(address: account)
+					try await Self.detailedAccountInfo(account)
 				}
 			}
-			let (liquid, staked) = try await group.reduce((BigInt.zero, BigInt.zero), { ($0.0 + $1.xrdLiquid, $0.1 + $1.xrdStaked) })
-			
-			return Aggregate(
-				profile: profile,
-				xrdLiquid: liquid,
-				xrdStaked: staked
+			for try await fetchedAccount in group {
+				accountsFetched.insert(fetchedAccount)
+			}
+	
+			return ProfileFetched(
+				name: profile.name,
+				accounts: Array(accountsFetched)
 			)
 		}
 	}

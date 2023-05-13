@@ -9,16 +9,17 @@ import Foundation
 import BigInt
 
 struct Aggregate {
-	let accounts: Set<String>
+	let profile: Profile
 	let xrdLiquid: BigInt
 	let xrdStaked: BigInt
 	
 	var summary: String {
 		"""
+		Profile: '\(profile.name)'
 		XRD Grand Total: \(xrdLiquid + xrdStaked)
 			available: \(xrdLiquid)
 			staked: \(xrdStaked)
-		#\(accounts.count) accounts
+		#\(profile.accounts.count) accounts
 		"""
 	}
 }

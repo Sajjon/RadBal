@@ -7,5 +7,5 @@ DerivedData/
 .swiftpm/config/registries.json
 .swiftpm/xcode/package.xcworkspace/contents.xcworkspacedata
 .netrc
-.accounts.json
-.accounts_legacy.json
+.profile.json
+.profile.legacy.json

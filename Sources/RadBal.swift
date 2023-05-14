@@ -15,14 +15,13 @@ public struct RadBal {
 		optional: Bool = false
 	) async throws -> ProfileFetched {
 		let url: URL = FileManager.default.homeDirectoryForCurrentUser.appending(path: profilePath)
-		let profileData = try Data(contentsOf: url)
-//		guard let profileData = FileManager.default.contents(atPath: profilePath) else {
-//			if !optional {
-//				print("Missing '\(profilePath)', create the file and place it in the root of the project.")
-//			}
-//			struct MissingFile: Error {}
-//			throw MissingFile()
-//		}
+		guard let profileData = try? Data(contentsOf: url) else {
+			if !optional {
+				print("Missing '\(profilePath)', create the file and place it in the root of the project.")
+			}
+			struct MissingFile: Error {}
+			throw MissingFile()
+		}
 		let jsonDecoder = JSONDecoder()
 		jsonDecoder.dateDecodingStrategy = .iso8601
 		let profile = try jsonDecoder.decode(Profile.self, from: profileData)
@@ -31,13 +30,13 @@ public struct RadBal {
 	
 	public static func main() async throws {
 		let separator = "~~~ √  Radix Aggregated Balances √ ~~~"
-//		print("\n\n\n" + separator)
-//		if let legacy = try? await aggregate(profile: ".profile.legacy.json", optional: true) {
-//			print("\nLEGACY:\n\(legacy)\n")
-//		}
+		print("\n\n\n" + separator)
+		if let legacy = try? await aggregate(profile: ".profile.legacy.json", optional: true) {
+			print("\nLEGACY:\n\(legacy)\n")
+		}
 		let babylonReady = try await aggregate(profile: ".profile.json")
 		print("BABYLON:\n\(babylonReady)")
-		print(separator + "\n\n\n")
+		print("\n" + separator + "\n\n\n")
 	}
 }
 					

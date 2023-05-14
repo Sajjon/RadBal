@@ -1,0 +1,23 @@
+{
+  "pins" : [
+    {
+      "identity" : "bigdecimal",
+      "kind" : "remoteSourceControl",
+      "location" : "https://github.com/leif-ibsen/BigDecimal",
+      "state" : {
+        "revision" : "a24584f71356ac1078a22b9ac84dbbdf9159fcc7",
+        "version" : "1.1.1"
+      }
+    },
+    {
+      "identity" : "bigint",
+      "kind" : "remoteSourceControl",
+      "location" : "https://github.com/leif-ibsen/BigInt",
+      "state" : {
+        "revision" : "1a2a7c057abf100500aa25fbaf7ba7d6a77c120d",
+        "version" : "1.12.0"
+      }
+    }
+  ],
+  "version" : 2
+}

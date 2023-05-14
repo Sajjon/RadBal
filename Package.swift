@@ -5,14 +5,18 @@ import PackageDescription
 
 let package = Package(
     name: "RadBal",
-    platforms: [.macOS(.v13)],
+	platforms: [.macOS(.v13), .iOS(.v16)],
+	products: [
+		.library(
+			name: "AppFeature",
+			targets: ["AppFeature"]),
+	],
     dependencies: [
 		.package(url: "https://github.com/leif-ibsen/BigDecimal", from: "1.1.1"),
     ],
     targets: [
 		.target(name: "Backend", dependencies: ["BigDecimal"]),
-        // Targets are the basic building blocks of a package, defining a module or a test suite.
-        // Targets can depend on other targets in this package and products from dependencies.
+		.target(name: "AppFeature", dependencies: ["Backend"]),
         .executableTarget(
             name: "CLI",
             dependencies: [

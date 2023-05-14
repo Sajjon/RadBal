@@ -8,7 +8,7 @@
 import Foundation
 import BigDecimal
 
-struct ProfileFetched: CustomStringConvertible {
+struct ProfileFetched {
 	struct Account: Hashable {
 		
 		let account: Profile.Account
@@ -37,8 +37,8 @@ struct ProfileFetched: CustomStringConvertible {
 			self.altcoinBalances = altcoinBalances
 		}
 		
-		var detailed: String {
-			"\(account):\n\(altcoinBalances.map(\.detailed).map{ $0.indent(level: 3) }.joined(separator: "\n"))"
+		func details(fiat: Fiat) -> String {
+			"\(account):\n\(altcoinBalances.map({ $0.detail(fiat: fiat) }).map{ $0.indent(level: 3) }.joined(separator: "\n"))"
 		}
 	}
 	
@@ -47,6 +47,8 @@ struct ProfileFetched: CustomStringConvertible {
 	
 	/// All accounts associated with this profile/wallet.
 	let accounts: [Account]
+	
+	let xrdValueInSelectedFiat: BigDecimal
 	
 	var xrdLiquid: BigDecimal {
 		accounts.reduce(BigDecimal(0)) { $0 + $1.xrdLiquid }
@@ -89,23 +91,25 @@ struct ProfileFetched: CustomStringConvertible {
 	private var relevantAccounts: [Account] {
 		accounts.filter(\.hasAltcoinValueAboveThreshold)
 	}
-	var accountsDetails: String? {
+	func accountsDetails(fiat: Fiat) -> String? {
 		
 		guard !relevantAccounts.isEmpty else {
 			return nil
 		}
 	
 		return relevantAccounts
-			.map(\.detailed)
+			.map({ $0.details(fiat: fiat) })
 			.map { $0.indent(level: 2) }
 			.joined(separator: "\n")
 	}
 	
 	
 	
-	var detailed: String? {
+	func detailed(fiat: Fiat) -> String? {
 		guard let grandTotalXRDAmount = condAgg(\.aggGrandTotal) else { return nil }
-		let grandTotal = format(xrdAmount: grandTotalXRDAmount, label: "GRAND TOTAL")
+		let grandTotalXRDAmountString = format(xrdAmount: grandTotalXRDAmount, label: "GRAND TOTAL")
+		let grandTotalFiatWorth = xrdValueInSelectedFiat * grandTotalXRDAmount
+		let grandTotalFiatWorthString = "GRAND TOTAL: \(grandTotalFiatWorth.format(style: .valueInFiat(fiat)))"
 
 		let profileName = "Profile: '\(name)'"
 		let availableOrNil = condAggXRDAmountFormatted(\.xrdLiquid, "Available").map { $0 + " (\(accounts.filter { $0.xrdLiquid > thresholdXRDAmount }.map { "\($0.account.nameOrIndex): \($0.xrdLiquid.amountOfXRDFormat)" }.joined(separator: ", ")))" }
@@ -115,21 +119,22 @@ struct ProfileFetched: CustomStringConvertible {
 		
 		return Array<String?>([
 			profileName,
-			grandTotal,
+			grandTotalFiatWorthString,
+			grandTotalXRDAmountString,
 			availableOrNil.indent(),
 			stakedOrNil.indent(),
 			altsOrNil.indent(),
 			numberOfAccounts.indent(),
-			accountsDetails.map { "Accounts with alts:\n\($0)" }.indent()
+			accountsDetails(fiat: fiat).map { "Accounts with alts:\n\($0)" }.indent()
 		]).compactMap { $0 }
 			.joined(separator: "\n")
 	}
 	
-	var description: String {
-		guard let detailed else {
+	func descriptionOrIngored(fiat: Fiat) -> String {
+		guard let detailedDescription = detailed(fiat: fiat) else {
 			return "Profile: '\(name)' has not enough value."
 		}
-		return detailed
+		return detailedDescription
 	}
 }
 

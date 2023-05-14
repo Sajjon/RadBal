@@ -31,18 +31,19 @@ extension AltcoinBalance {
 		return roi
 	}
 	
-	var detailed: String {
-		detail(showAltcoinAmount: true, showWorthInUSD: false)
-	}
 	
-	func detail(showAltcoinAmount: Bool, showWorthInUSD: Bool) -> String {
+	func detail(
+		fiat: Fiat,
+		showAltcoinAmount: Bool = true,
+		showWorthInUSD: Bool = true
+	) -> String {
 		let amount: String? = { () -> String? in
 			guard showAltcoinAmount else { return nil }
 			guard let purchase, case let diff = (purchase.altcoinAmount - balance).abs, diff > 10 else { return balance.amountOfAltcoinFormat }
 			return balance.amountOfAltcoinFormat + " (bought: \(purchase.altcoinAmount.amountOfAltcoinFormat))"
 		}()
 		
-		let worthInUSD: String? = showWorthInUSD ? worthInUSD.valueInDefaultFiatFormat : nil
+		let worthInUSD: String? = showWorthInUSD ? worthInUSD.format(style: .valueInFiat(fiat)) : nil
 		let roi: String? = returnOnInvestment.map { "| ROI: \($0.roiFormat)" }
 		return Array<String?>([
 			tokenInfo.symbol.uppercased(),
@@ -58,9 +59,7 @@ extension BigDecimal {
 	var amountOfXRDFormat: String {
 		format(style: .amountOfXRD)
 	}
-	var valueInDefaultFiatFormat: String {
-		format(style: .valueInDefaultFiat)
-	}
+
 	var valueInXRDFormat: String {
 		format(style: .valueInXRD)
 	}
@@ -83,7 +82,6 @@ extension BigDecimal {
 		case amountOfXRD
 		case valueInXRD
 		case valueInFiat(Fiat)
-		static let valueInDefaultFiat: Self = .valueInFiat(.default)
 		case amountOfAltcoin
 		case percentage
 		var prefix: String? {
@@ -119,9 +117,9 @@ extension BigDecimal {
 		case .amountOfAltcoin:
 			return round(.init(.HALF_DOWN, 6))
 		case .valueInXRD, .amountOfXRD:
-			return round(.init(.HALF_EVEN, 2)) // or rather `0`?
+			return round(.init(.HALF_EVEN, 2))
 		case .valueInFiat:
-			return round(.init(.UP, 0)) // or rather `0`?
+			return round(.init(.HALF_EVEN, 3))
 		}
 	}
 }
@@ -129,7 +127,6 @@ extension BigDecimal {
 enum Fiat {
 	case usd
 	case sek
-	static let `default`: Self = .usd
 	var prefix: String? {
 		switch self {
 		case .usd: return "$"

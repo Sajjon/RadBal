@@ -11,6 +11,7 @@ let aggThresholdXRDAmount = BigDecimal(3000)
 public struct RadBal {
 	
 	static func aggregate(
+		fiat: Fiat,
 		profile profilePath: String,
 		optional: Bool = false
 	) async throws -> ProfileFetched {
@@ -25,17 +26,18 @@ public struct RadBal {
 		let jsonDecoder = JSONDecoder()
 		jsonDecoder.dateDecodingStrategy = .iso8601
 		let profile = try jsonDecoder.decode(Profile.self, from: profileData)
-		return try await Aggregator.of(profile: profile)
+		return try await Aggregator.of(profile: profile, fiat: fiat)
 	}
 	
 	public static func main() async throws {
+		let fiat: Fiat = .sek
 		let separator = "~~~ √  Radix Aggregated Balances √ ~~~"
 		print("\n\n\n" + separator)
-		if let legacy = try? await aggregate(profile: ".profile.legacy.json", optional: true) {
-			print("\nLEGACY:\n\(legacy)\n")
+		if let legacy = try? await aggregate(fiat: fiat, profile: ".profile.legacy.json", optional: true) {
+			print("\nLEGACY:\n\(legacy.descriptionOrIngored(fiat: fiat))\n")
 		}
-		let babylonReady = try await aggregate(profile: ".profile.json")
-		print("BABYLON:\n\(babylonReady)")
+		let babylonReady = try await aggregate(fiat: fiat, profile: ".profile.json")
+		print("BABYLON:\n\(babylonReady.descriptionOrIngored(fiat: fiat))")
 		print("\n" + separator + "\n\n\n")
 	}
 }

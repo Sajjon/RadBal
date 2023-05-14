@@ -18,8 +18,6 @@ actor PricesCacheActor: GlobalActor {
 	static let shared = PricesCacheActor()
 	func cache(_ prices: Prices) {
 		self.cached = prices
-		
-		print("\n\n\n\n\n\n🔮🔮🔮🔮🔮🔮🔮🔮🔮\n\nprices: \(prices)")
 	}
 	
 }

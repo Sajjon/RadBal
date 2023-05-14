@@ -27,17 +27,9 @@ extension TokenAmount {
 	}
 	
 	func amount() throws -> BigDecimal {
-//		let intermediary = value.dropLast(18)
 		let value_ = BigDecimal(valueString)
-		let attos = BigDecimal("1e18")
-		let amount = value_ / attos
-//		guard let whole = Number(intermediary) else {
-//			print("❌\nvalue: '\(value)'\nintermediary: '\(intermediary)'")
-//			throw FailedToConvertFromAttos()
-//		}
-		if valueString == "199999980000000000" {
-			print("🔮\nrri:\(self.rri),value: '\(valueString)'\nattos: '\(attos)'\namount: '\(amount)'")
-		}
+		let attos = BigDecimal("1000000000000000000")
+		let amount: BigDecimal = value_.divide(attos, .decimal128)
 		return amount
 	}
 }

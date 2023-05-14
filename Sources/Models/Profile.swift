@@ -56,13 +56,12 @@ struct Profile: Decodable {
 			/// Number of XRDs sold, base 10, as a string
 			let xrdAmountSpentString: String
 			var xrdAmountSpent: BigDecimal {
-//				.init(xrdAmountSpentString, radix: 10)!
 				BigDecimal(xrdAmountSpentString)
 			}
 			
 			var priceInXRD: BigDecimal {
-//				Double(xrdAmountSpent) / Double(altcoinAmount)
-				xrdAmountSpent / altcoinAmount
+				let price = xrdAmountSpent.divide(altcoinAmount, .decimal128)
+				return price
 			}
 			
 			/// Date the trade took place

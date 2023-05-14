@@ -4,6 +4,7 @@ import BigDecimal
 /// Held tokens for any account worth less than this threshold will not be displayed or
 /// added to the aggregate worth of the profile. aka. "shitcoin filter".
 let thresholdValueInUSD = BigDecimal(500)
+let thresholdXRDAmount = BigDecimal(1000)
 
 @main
 public struct RadBal {

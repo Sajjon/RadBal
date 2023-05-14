@@ -17,10 +17,7 @@ let package = Package(
             dependencies: [
 				"BigDecimal",
             ],
-            path: "Sources",
-            resources: [
-                .process(".profile.json"),
-            ]
+            path: "Sources"
         ),
     ]
 )

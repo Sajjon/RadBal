@@ -13,7 +13,6 @@ extension Aggregator {
 	
 	
 	static func detailedAccountInfo(_ account: Profile.Account) async throws -> ProfileFetched.Account {
-		print("account: \(account)")
 		let tokenBalances = try await RadixDLTGateway.getBalanceOfAccount(address: account.address)
 		
 		guard !tokenBalances.altCoinsBalances.isEmpty else {
@@ -46,9 +45,8 @@ extension Aggregator {
 			account: account,
 			xrdLiquid: tokenBalances.xrdLiquid,
 			xrdStaked: tokenBalances.xrdStaked,
-			altcoinBalances: altcoinBalances.filter { $0.worthInXRD >= thresholdValueInUSD }
+			altcoinBalances: altcoinBalances.filter { $0.worthInUSD > thresholdValueInUSD }
 		)
-		print("done: \(fetchedAccount)")
 		return fetchedAccount
 	}
 	

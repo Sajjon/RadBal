@@ -32,12 +32,20 @@ extension AltcoinBalance {
 	}
 	
 	var detailed: String {
-		let exclRoi = "\(tokenInfo.symbol): \(balance.amountOfAltcoinFormat) => XRD: \(worthInXRD.amountOfXRDFormat) => $\(worthInUSD.valueInDefaultFiatFormat)"
-		guard let roi = returnOnInvestment else {
-			return exclRoi
-		}
-		
-		return exclRoi + " | ROI: \(roi.roiFormat)"
+		detail(showAltcoinAmount: false, showWorthInUSD: false)
+	}
+	
+	func detail(showAltcoinAmount: Bool, showWorthInUSD: Bool) -> String {
+		let amount: String? = showAltcoinAmount ? balance.amountOfAltcoinFormat : nil
+		let worthInUSD: String? = showWorthInUSD ? worthInUSD.valueInDefaultFiatFormat : nil
+		let roi: String? = returnOnInvestment.map { "| ROI: \($0.roiFormat)" }
+		return Array<String?>([
+			tokenInfo.symbol.uppercased(),
+			amount,
+			worthInXRD.amountOfXRDFormat,
+			worthInUSD,
+			roi
+		]).compactMap({ $0 }).joined(separator: " ")
 	}
 }
 
@@ -55,7 +63,15 @@ extension BigDecimal {
 		format(style: .amountOfAltcoin)
 	}
 	var roiFormat: String {
-		format(style: .percentage)
+		if self > BigDecimal.ONE {
+			let diff =  self - BigDecimal.ONE
+			return "+\(diff.format(style: .percentage))"
+		} else if self < BigDecimal.ONE {
+			let diff = BigDecimal.ONE - self
+			return "-\(diff.format(style: .percentage))"
+		} else {
+			return format(style: .percentage)
+		}
 	}
 	
 	enum Style {
@@ -68,9 +84,8 @@ extension BigDecimal {
 		var prefix: String? {
 			switch self {
 			case .amountOfAltcoin: return "∀"
-			case .amountOfXRD: return "√"
+			case .amountOfXRD, .valueInXRD: return "√"
 			case .percentage: return ""
-			case .valueInXRD: return "√"
 			case let .valueInFiat(fiat):
 				return fiat.prefix
 			}
@@ -88,20 +103,20 @@ extension BigDecimal {
 	}
 	func format(style: Style) -> String {
 		let rounded = round(style: style)
-		let stringified: String? = .some(String(describing: rounded))
+		let stringified = rounded.asString(.PLAIN)
 		return [style.prefix, stringified, style.suffix].compactMap { $0 }.joined()
 	}
 	
 	private func round(style: Style) -> Self {
 		switch style {
 		case .percentage:
-			return round(.init(.HALF_DOWN, 2))
+			return (BigDecimal(100)*self).round(.init(.HALF_DOWN, 2))
 		case .amountOfAltcoin:
 			return round(.init(.HALF_DOWN, 6))
 		case .valueInXRD, .amountOfXRD:
-			return round(.init(.UP, 1)) // or rather `0`?
+			return round(.init(.HALF_EVEN, 2)) // or rather `0`?
 		case .valueInFiat:
-			return round(.init(.UP, 1)) // or rather `0`?
+			return round(.init(.UP, 0)) // or rather `0`?
 		}
 	}
 }

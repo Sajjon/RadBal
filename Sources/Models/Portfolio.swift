@@ -29,7 +29,7 @@ extension TokenAmount {
 	func amount() throws -> BigDecimal {
 		let value_ = BigDecimal(valueString)
 		let attos = BigDecimal("1000000000000000000")
-		let amount: BigDecimal = value_.divide(attos, .decimal128)
+		let amount: BigDecimal = value_.divide(attos)
 		return amount
 	}
 }

@@ -30,10 +30,16 @@ struct Profile: Decodable {
 		var shortAddress: String {
 			String(address.suffix(8))
 		}
+		
+		var nameOrIndex: String {
+			name.map { "'\($0)'" } ?? "\(index)"
+		}
+		
 		var description: String {
 			[
-				name ?? "\(index)", shortAddress
-			].joined(separator: "|")
+				nameOrIndex,
+				"...\(shortAddress)"
+			].joined(separator: " | ")
 		}
 		
 		let trades: [Trade]?
@@ -48,8 +54,6 @@ struct Profile: Decodable {
 			/// Number of altcoins bought, base 10, as a string
 			let altcoinAmountString: String
 			var altcoinAmount: BigDecimal {
-//				.init(altcoinAmountString, radix: 10)!
-//				Number(altcoinAmountString)!
 				BigDecimal(altcoinAmountString)
 			}
 			

@@ -38,7 +38,7 @@ struct ProfileFetched: CustomStringConvertible {
 		}
 		
 		var detailed: String {
-			"Account: \(account):\n\(altcoinBalances.map(\.detailed).map{ $0.indent(level: 3) }.joined(separator: "\n"))"
+			"\(account):\n\(altcoinBalances.map(\.detailed).map{ $0.indent(level: 3) }.joined(separator: "\n"))"
 		}
 	}
 	
@@ -57,7 +57,7 @@ struct ProfileFetched: CustomStringConvertible {
 	
 	private func condAgg(_ keyPath: KeyPath<Self, BigDecimal>) -> BigDecimal? {
 		let value = self[keyPath: keyPath]
-		guard value > thresholdXRDAmount else {
+		guard value > aggThresholdXRDAmount else {
 			return nil
 		}
 		return value
@@ -108,7 +108,7 @@ struct ProfileFetched: CustomStringConvertible {
 		let grandTotal = format(xrdAmount: grandTotalXRDAmount, label: "GRAND TOTAL")
 
 		let profileName = "Profile: '\(name)'"
-		let availableOrNil = condAggXRDAmountFormatted(\.xrdLiquid, "Available")
+		let availableOrNil = condAggXRDAmountFormatted(\.xrdLiquid, "Available").map { $0 + " (\(accounts.filter { $0.xrdLiquid > thresholdXRDAmount }.map { "\($0.account.nameOrIndex): \($0.xrdLiquid.amountOfXRDFormat)" }.joined(separator: ", ")))" }
 		let stakedOrNil = condAggXRDAmountFormatted(\.xrdStaked, "Staked")
 		let altsOrNil = condAggXRDAmountFormatted(\.xrdValueOfAllAltcoins, "ALTs")
 		let numberOfAccounts = "#\(accounts.count) accounts"

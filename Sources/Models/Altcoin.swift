@@ -32,11 +32,16 @@ extension AltcoinBalance {
 	}
 	
 	var detailed: String {
-		detail(showAltcoinAmount: false, showWorthInUSD: false)
+		detail(showAltcoinAmount: true, showWorthInUSD: false)
 	}
 	
 	func detail(showAltcoinAmount: Bool, showWorthInUSD: Bool) -> String {
-		let amount: String? = showAltcoinAmount ? balance.amountOfAltcoinFormat : nil
+		let amount: String? = { () -> String? in
+			guard showAltcoinAmount else { return nil }
+			guard let purchase, case let diff = (purchase.altcoinAmount - balance).abs, diff > 10 else { return balance.amountOfAltcoinFormat }
+			return balance.amountOfAltcoinFormat + " (bought: \(purchase.altcoinAmount.amountOfAltcoinFormat))"
+		}()
+		
 		let worthInUSD: String? = showWorthInUSD ? worthInUSD.valueInDefaultFiatFormat : nil
 		let roi: String? = returnOnInvestment.map { "| ROI: \($0.roiFormat)" }
 		return Array<String?>([

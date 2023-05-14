@@ -7,11 +7,13 @@
 
 import Foundation
 
-struct TokenInfo: Decodable, Hashable {
+struct TokenInfo: Decodable, Hashable, Identifiable {
+	typealias ID = String
+	var id: ID { rri }
 	let tokenInfoURL: String // "https://caviarnine.com/",
 	let symbol: String
 	let isSupplyMutable: Bool
-	let granularity: Int
+	let granularity: String
 	let name: String//"Floop",
 	let rri: String // "floop_rr1q0p0hzap6ckxqdk6khesyft62w34e0vdd06msn9snhfqknl370",
 	let description: String // "Flippity floppity floop",

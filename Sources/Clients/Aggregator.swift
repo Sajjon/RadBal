@@ -6,34 +6,111 @@
 //
 
 import Foundation
-import BigInt
+import BigDecimal
 
 enum Aggregator {}
 extension Aggregator {
 	
+	
 	static func detailedAccountInfo(_ account: Profile.Account) async throws -> ProfileFetched.Account {
-		let xrdBalance = try await RadixDLTGateway.getBalanceOfAccount(address: account.address)
-		return .init(xrdBalance: xrdBalance, account: account, altcoins: [])
-	}
-	
-	static func of(profile: Profile) async throws -> ProfileFetched {
+		let tokenBalances = try await RadixDLTGateway.getBalanceOfAccount(address: account.address)
 		
-		try await withThrowingTaskGroup(of: ProfileFetched.Account.self, returning: ProfileFetched.self) { group in
-			var accountsFetched: Set<ProfileFetched.Account> = []
-			for account in profile.accounts {
-				_ = group.addTaskUnlessCancelled {
-					try await Self.detailedAccountInfo(account)
-				}
-			}
-			for try await fetchedAccount in group {
-				accountsFetched.insert(fetchedAccount)
-			}
-	
-			return ProfileFetched(
-				name: profile.name,
-				accounts: Array(accountsFetched)
+		guard !tokenBalances.altCoinsBalances.isEmpty else {
+			return ProfileFetched.Account(
+				account: account,
+				xrdLiquid: tokenBalances.xrdLiquid,
+				xrdStaked: tokenBalances.xrdStaked,
+				altcoinBalances: []
 			)
 		}
+		
+		let altcoinBalances: [AltcoinBalance] = try await tokenBalances
+			.altCoinsBalances
+			.asyncCompactMap { altcoinBalanceSimple -> AltcoinBalance? in
+				let rri = altcoinBalanceSimple.rri
+				guard let price = try await RadixScanClient.price(of: rri) else {
+					return nil
+				}
+				let tokenInfo = try await RadixScanClient.info(of: rri)
+				
+				return try AltcoinBalance(
+					balance: altcoinBalanceSimple.amount(),
+					price: price,
+					tokenInfo: tokenInfo,
+					purchase: account.trades?.first(where: { $0.rri == rri })
+				)
+			}
+		
+		let fetchedAccount = ProfileFetched.Account(
+			account: account,
+			xrdLiquid: tokenBalances.xrdLiquid,
+			xrdStaked: tokenBalances.xrdStaked,
+			altcoinBalances: altcoinBalances.filter { $0.worthInUSD > thresholdValueInUSD }
+		)
+		return fetchedAccount
 	}
 	
+	static func of(profile: Profile, fiat: Fiat) async throws -> ProfileFetched {
+		let accounts = try await profile.accounts.asyncMap { try await Self.detailedAccountInfo($0) }
+		let xrdValueInSelectedFiat = try await Self.priceOfXRD(in: fiat)
+		return ProfileFetched(
+			name: profile.name,
+			accounts: accounts,
+			xrdValueInSelectedFiat: xrdValueInSelectedFiat
+		)
+		
+	}
+	
+	static func priceOfXRD(in fiat: Fiat) async throws -> BigDecimal {
+			switch fiat {
+			case .usd:
+				guard let price = try await RadixScanClient.price(of: xrd) else {
+					throw FailedToGetPriceOfXRDInUSD()
+				}
+				return price.inUSD
+			default:
+				return try await Self.priceOfXRD(in: .usd) * BigDecimal(FiatCurrencyConverter.priceInUSD(of: fiat))
+			}
+	}
+}
+
+struct FailedToGetPriceOfXRDInUSD: Error {}
+
+enum FiatCurrencyConverter {}
+extension FiatCurrencyConverter {
+	static func priceInUSD(of fiat: Fiat) async throws -> Double {
+		let ticker = fiat.ticker
+		let url = "https://open.er-api.com/v6/latest/\(ticker)"
+		let request = URLRequest(url: .init(string: url)!)
+		let (data, response) = try await URLSession.shared.data(for: request)
+		guard let httpURLResponse = response as? HTTPURLResponse else {
+			throw FailedToFetchNotHTTPURLResponse()
+		}
+		guard httpURLResponse.statusCode == 200 else {
+			throw FailedToFetchBadStatusCode(statusCode: httpURLResponse.statusCode)
+		}
+		let jsonDecoder = JSONDecoder()
+		struct Response: Decodable {
+			let rates: Dictionary<String, Double>
+		}
+		let responseRaw = try jsonDecoder.decode(Response.self, from: data)
+		let rates = responseRaw.rates
+		guard
+			rates.contains(where: { $0.key.uppercased() == ticker.uppercased() }),
+			let rateInUSDPair = rates.first(where: { $0.key.uppercased() == Fiat.usd.ticker.uppercased() })
+		else {
+			struct NoRateFound: Error {}
+			throw NoRateFound()
+		}
+		return 1.0 / rateInUSDPair.value
+	}
+}
+
+extension Fiat {
+	var ticker: String {
+		switch self {
+		case .sek: return "SEK"
+		case .usd: return "USD"
+		}
+	}
 }

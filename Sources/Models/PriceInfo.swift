@@ -6,8 +6,11 @@
 //
 
 import Foundation
+import BigDecimal
 
-struct PriceInfo {
+
+struct PriceInfo: Hashable {
 	let rri: String
-	let usdValue: Float
+	let inUSD: BigDecimal
+	let inXRD: BigDecimal
 }

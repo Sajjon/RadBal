@@ -10,14 +10,14 @@ let package = Package(
 		.package(url: "https://github.com/leif-ibsen/BigDecimal", from: "1.1.1"),
     ],
     targets: [
+		.target(name: "Backend", dependencies: ["BigDecimal"]),
         // Targets are the basic building blocks of a package, defining a module or a test suite.
         // Targets can depend on other targets in this package and products from dependencies.
         .executableTarget(
-            name: "RadBal",
+            name: "CLI",
             dependencies: [
-				"BigDecimal",
-            ],
-            path: "Sources"
+				"Backend",
+            ]
         ),
     ]
 )

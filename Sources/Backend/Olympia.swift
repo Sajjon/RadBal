@@ -7,10 +7,10 @@ let thresholdValueInUSD = BigDecimal(500)
 let thresholdXRDAmount = BigDecimal(500)
 let aggThresholdXRDAmount = BigDecimal(3000)
 
-@main
-public struct RadBal {
+public enum Olympia {}
+extension Olympia {
 	
-	static func aggregate(
+	public static func aggregate(
 		fiat: Fiat,
 		profile profilePath: String,
 		optional: Bool = false
@@ -29,17 +29,6 @@ public struct RadBal {
 		return try await Aggregator.of(profile: profile, fiat: fiat)
 	}
 	
-	public static func main() async throws {
-		let fiat: Fiat = .sek
-		let separator = "~~~ √  Radix Aggregated Balances √ ~~~"
-		print("\n\n\n" + separator)
-		if let legacy = try? await aggregate(fiat: fiat, profile: ".profile.legacy.json", optional: true) {
-			print("\nLEGACY:\n\(legacy.descriptionOrIngored(fiat: fiat))\n")
-		}
-		let babylonReady = try await aggregate(fiat: fiat, profile: ".profile.json")
-		print("BABYLON:\n\(babylonReady.descriptionOrIngored(fiat: fiat))")
-		print("\n" + separator + "\n\n\n")
-	}
 }
 					
 		

@@ -124,7 +124,7 @@ extension BigDecimal {
 	}
 }
 
-enum Fiat {
+public enum Fiat {
 	case usd
 	case sek
 	var prefix: String? {

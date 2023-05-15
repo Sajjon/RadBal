@@ -29,34 +29,49 @@ public struct AltcoinBalance: Hashable, Codable {
 
 extension AltcoinBalance {
 	
-	var worthInUSD: BigDecimal {
+	public func worth(in fiatPriceInUSD: BigDecimal) -> BigDecimal {
+		worthInUSD * fiatPriceInUSD
+	}
+	
+	public var worthInUSD: BigDecimal {
 		balance * price.inUSD
 	}
 	
-	var worthInXRD: BigDecimal {
+	public var worthInXRD: BigDecimal {
 		balance * price.inXRD
 	}
 	
-	var returnOnInvestment: BigDecimal? {
+	public var returnOnInvestment: BigDecimal? {
 		guard let purchase else { return nil }
 		let roi = price.inXRD.divide(purchase.priceInXRD, .decimal128)
 		return roi
 	}
 	
+	public var amountOfAltcoinWithPurchaseIfAny: String {
+		guard
+			let purchase,
+			case let diff = (purchase.altcoinAmount - balance).abs,
+			diff > 10
+		else { return balance.amountOfAltcoinFormat }
+		
+		return balance.amountOfAltcoinFormat + " (\(purchase.altcoinAmount.amountOfAltcoinFormat))"
+	}
 	
 	func detail(
 		fiat: Fiat,
 		showAltcoinAmount: Bool = true,
 		showWorthInUSD: Bool = true
 	) -> String {
+		
 		let amount: String? = { () -> String? in
 			guard showAltcoinAmount else { return nil }
-			guard let purchase, case let diff = (purchase.altcoinAmount - balance).abs, diff > 10 else { return balance.amountOfAltcoinFormat }
-			return balance.amountOfAltcoinFormat + " (bought: \(purchase.altcoinAmount.amountOfAltcoinFormat))"
+			return amountOfAltcoinWithPurchaseIfAny
 		}()
 		
 		let worthInUSD: String? = showWorthInUSD ? worthInUSD.format(style: .valueInFiat(fiat)) : nil
+		
 		let roi: String? = returnOnInvestment.map { "| ROI: \($0.roiFormat)" }
+		
 		return Array<String?>([
 			tokenInfo.symbol.uppercased(),
 			amount,
@@ -125,11 +140,11 @@ extension BigDecimal {
 	private func round(style: Style) -> Self {
 		switch style {
 		case .percentage:
-			return (BigDecimal(100)*self).round(.init(.HALF_DOWN, 2))
+			return (BigDecimal(100)*self).round(.init(.HALF_EVEN, 2))
 		case .amountOfAltcoin:
-			return round(.init(.HALF_DOWN, 6))
+			return round(.init(.HALF_EVEN, 6))
 		case .valueInXRD, .amountOfXRD:
-			return round(.init(.HALF_EVEN, 2))
+			return round(.init(.HALF_EVEN, 4))
 		case .valueInFiat:
 			return round(.init(.HALF_EVEN, 3))
 		}

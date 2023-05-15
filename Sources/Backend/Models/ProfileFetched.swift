@@ -18,22 +18,32 @@ public struct Report: Codable {
 	/// All accounts associated with this profile/wallet.
 	public let accounts: [Account]
 	
+	public let usdValueInSelectedFiat: BigDecimal
+	public let xrdValueInUSD: BigDecimal
 	public let xrdValueInSelectedFiat: BigDecimal
 	
-	public init(profile: Profile, accounts: [Account], xrdValueInSelectedFiat: BigDecimal) {
+	public init(
+		profile: Profile,
+		accounts: [Account],
+		usdValueInSelectedFiat: BigDecimal,
+		xrdValueInUSD: BigDecimal,
+		xrdValueInSelectedFiat: BigDecimal
+	) {
 		self.profile = profile
 		self.accounts = accounts
 		self.xrdValueInSelectedFiat = xrdValueInSelectedFiat
+		self.xrdValueInUSD = xrdValueInUSD
+		self.usdValueInSelectedFiat = usdValueInSelectedFiat
 	}
 }
 
 extension Report {
 	public struct Account: Hashable, Codable {
 		
-		let account: Profile.Account
-		let xrdLiquid: BigDecimal
-		let xrdStaked: BigDecimal
-		let altcoinBalances: [AltcoinBalance]
+		public let account: Profile.Account
+		public let xrdLiquid: BigDecimal
+		public let xrdStaked: BigDecimal
+		public let altcoinBalances: [AltcoinBalance]
 		
 		init(
 			account: Profile.Account,
@@ -105,7 +115,7 @@ extension Report {
 		return format(xrdAmount: value, label: label)
 	}
 	
-	private var relevantAccounts: [Account] {
+	public var relevantAccounts: [Account] {
 		accounts.filter(\.hasAltcoinValueAboveThreshold)
 	}
 	
@@ -121,12 +131,18 @@ extension Report {
 			.joined(separator: "\n")
 	}
 	
-	
+	public var grandTotalFiatWorth: BigDecimal { xrdValueInSelectedFiat * aggGrandTotal }
 	
 	public func detailed(fiat: Fiat) -> String? {
-		guard let grandTotalXRDAmount = condAgg(\.aggGrandTotal) else { return nil }
-		let grandTotalXRDAmountString = format(xrdAmount: grandTotalXRDAmount, label: "GRAND TOTAL")
-		let grandTotalFiatWorth = xrdValueInSelectedFiat * grandTotalXRDAmount
+		guard
+			let grandTotalXRDAmount = condAgg(\.aggGrandTotal)
+		else { return nil }
+		
+		let grandTotalXRDAmountString = format(
+			xrdAmount: grandTotalXRDAmount,
+			label: "GRAND TOTAL"
+		)
+		
 		let grandTotalFiatWorthString = "GRAND TOTAL: \(grandTotalFiatWorth.format(style: .valueInFiat(fiat)))"
 		
 		let profileName = "Profile: '\(name)'"

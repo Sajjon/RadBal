@@ -66,7 +66,7 @@ extension Trade {
 
 extension Profile.Account {
 	public var shortAddress: String {
-		String(address.suffix(8))
+		String(address.suffix(6))
 	}
 	
 	public var nameOrIndex: String {

@@ -52,25 +52,28 @@ extension Aggregator {
 	
 	static func of(profile: Profile, fiat: Fiat) async throws -> Report {
 		let accounts = try await profile.accounts.asyncMap { try await Self.detailedAccountInfo($0) }
-		let xrdValueInSelectedFiat = try await Self.priceOfXRD(in: fiat)
+		
+		let usdValueInSelectedFiat = try await BigDecimal(FiatCurrencyConverter.priceInUSD(of: fiat))
+		
+		let xrdValueInUSD = try await Self.priceOfXRDinUSD()
+		
+		let xrdValueInSelectedFiat = usdValueInSelectedFiat * xrdValueInUSD
+	
 		return Report(
 			profile: profile,
 			accounts: accounts,
+			usdValueInSelectedFiat: usdValueInSelectedFiat,
+			xrdValueInUSD: xrdValueInUSD,
 			xrdValueInSelectedFiat: xrdValueInSelectedFiat
 		)
 		
 	}
 	
-	static func priceOfXRD(in fiat: Fiat) async throws -> BigDecimal {
-			switch fiat {
-			case .usd:
-				guard let price = try await RadixScanClient.price(of: xrd) else {
-					throw FailedToGetPriceOfXRDInUSD()
-				}
-				return price.inUSD
-			default:
-				return try await Self.priceOfXRD(in: .usd) * BigDecimal(FiatCurrencyConverter.priceInUSD(of: fiat))
-			}
+	static func priceOfXRDinUSD() async throws -> BigDecimal {
+		guard let price = try await RadixScanClient.price(of: xrd) else {
+			throw FailedToGetPriceOfXRDInUSD()
+		}
+		return price.inUSD
 	}
 }
 

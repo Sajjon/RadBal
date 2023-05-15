@@ -46,7 +46,7 @@ public struct AppView: SwiftUI.View {
 	public var body: some SwiftUI.View {
 		NavigationStack {
 			ScrollView {
-				VStack {
+				VStack(spacing: 20) {
 					if isLoading {
 						Text("Fetching...")
 					}
@@ -89,6 +89,7 @@ public struct AppView: SwiftUI.View {
 	func content(report: Report) -> some View {
 		if let lastFetched {
 			Text("\(lastFetched.secondsAgo) seconds ago")
+				.font(.caption2)
 			#if os(macOS)
 			Button("Force fetch") {
 				Task {
@@ -98,6 +99,7 @@ public struct AppView: SwiftUI.View {
 			#endif
 		}
 		ReportView(report: report, fiat: UserDefaults.standard.fiat)
+			.frame(maxWidth: .infinity)
 	}
 	
 	var reportOrCached: CachedReport? {

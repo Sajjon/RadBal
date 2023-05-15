@@ -66,11 +66,11 @@ extension Trade {
 
 extension Profile.Account {
 	public var shortAddress: String {
-		String(address.suffix(6))
+		String(address.suffix(4))
 	}
 	
 	public var nameOrIndex: String {
-		name.map { "'\($0)'" } ?? "\(index)"
+		name ?? "\(index)"
 	}
 	
 	public var description: String {

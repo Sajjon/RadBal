@@ -33,43 +33,46 @@ extension ReportView {
 	var body: some SwiftUI.View {
 		VStack(alignment: .leading, spacing: 32) {
 			
-			VStack(alignment: .leading, spacing: 16) {
+			VStack(alignment: .leading, spacing: 12) {
 				hPair("∑", fiat: \.grandTotalFiatWorth)
-				
 				hPair("∑", xrd: \.aggGrandTotal)
 			}
 			.font(.ubuntu(65))
 			
 			VStack(alignment: .leading, spacing: 8) {
-				Text("#\(accounts.count) accounts")
-				hPair("Staked", xrd: \.xrdStaked)
-				hPair("ALTs", xrd: \.xrdValueOfAllAltcoins)
+				Text("`XRD: \(self.report.xrdValueInSelectedFiat.format(style: .valueInFiat(fiat)))`")
+				Text("Accounts: #\(accounts.count) ")
+				hPair("Staked:", xrd: \.xrdStaked)
+				hPair("ALTs:", xrd: \.xrdValueOfAllAltcoins)
 			}
-			.font(.ubuntu(45))
+			.font(.ubuntu(40))
 			
 			LazyVStack(alignment: .leading, spacing: 24) {
 				ForEach(report.relevantAccounts, id: \.self) { account in
 					let acc = account.account
 					VStack(alignment: .leading) {
 						
-						HPair(acc.nameOrIndex, value: acc.shortAddress)
-							.font(.ubuntu(32))
+						HPair(acc.nameOrIndex, value: "`\(acc.shortAddress)`")
+							.font(.ubuntu(30))
 						
 						VStack(alignment: .leading, spacing: 12) {
 							ForEach(account.altcoinBalances, id: \.self) { altBal in
 								HStack {
 									Text(altBal.returnOnInvestment.map { $0.goodInvestment ? "📈" : "📉" } ?? "🆓")
+								
 									Text("`\(altBal.tokenInfo.symbol.uppercased())`")
-										.font(.headline)
+										.font(.ubuntu(20))
+									
 									Group {
 										Text(altBal.amountOfAltcoinWithPurchaseIfAny)
 										Text(altBal.worthInXRD.amountOfXRDFormat)
-										Text(altBal.worth(in: self.report.usdValueInSelectedFiat).format(style: .valueInFiat(fiat)))
+//										Text(altBal.worth(in: self.report.usdValueInSelectedFiat).format(style: .valueInFiat(fiat)))
 									}.font(.body)
 									
 									if let roi = altBal.returnOnInvestment {
+										Spacer()
 										Text("\(roi.roiFormat)")
-											.font(.title3)
+											.font(.ubuntu(20))
 											.foregroundColor(roi.goodInvestment ? Color.green : Color.red)
 									}
 								}
@@ -117,7 +120,7 @@ struct HPair: View {
 		self.title = title
 		self.value = value
 	}
-	init<Value>(_ title: String, value: Value) where Value: CustomStringConvertible {
+	init<Value>(_ title: String, _ value: Value) where Value: CustomStringConvertible {
 		self.init(title, value: String(describing: value))
 	}
 				

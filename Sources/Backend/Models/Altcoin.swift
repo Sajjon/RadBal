@@ -105,10 +105,16 @@ extension BigDecimal {
 		}
 	}
 	
-	public enum Style {
+	public enum Style: Equatable {
 		case amountOfXRD
 		case valueInXRD
 		case valueInFiat(Fiat)
+		var isValueInFiat: Bool {
+			switch self {
+			case .valueInFiat: return true
+			default: return false
+			}
+		}
 		case amountOfAltcoin
 		case percentage
 		var prefix: String? {
@@ -131,9 +137,34 @@ extension BigDecimal {
 			}
 		}
 	}
+	
+	var decimalThatFits: Decimal? {
+		let dec = self.asDecimal()
+		let bigD = BigDecimal(dec)
+		let diff = (bigD - self).abs
+		guard diff < BigDecimal(1E-20) else {
+			print("Not precisely expressible as Decimal...diff: \(diff)")
+			return nil
+		}
+		return dec
+	}
+	
 	public func format(style: Style) -> String {
 		let rounded = round(style: style)
-		let stringified = rounded.asString(.PLAIN)
+		
+		let stringified: String
+		let formatter = NumberFormatter()
+		formatter.groupingSeparator = " "
+		formatter.numberStyle = .decimal
+		if
+			let decimalThatFits = rounded.decimalThatFits,
+			let formattedFromDecimal = formatter.string(from: decimalThatFits as NSDecimalNumber)
+		{
+			stringified = formattedFromDecimal
+		} else {
+			stringified = rounded.asString(.PLAIN)
+		}
+		
 		return [style.prefix, stringified, style.suffix].compactMap { $0 }.joined()
 	}
 	
@@ -144,14 +175,14 @@ extension BigDecimal {
 		case .amountOfAltcoin:
 			return round(.init(.HALF_EVEN, 6))
 		case .valueInXRD, .amountOfXRD:
-			return round(.init(.HALF_EVEN, 4))
+			return round(.init(.HALF_EVEN, 3))
 		case .valueInFiat:
 			return round(.init(.HALF_EVEN, 3))
 		}
 	}
 }
 
-public enum Fiat: String {
+public enum Fiat: String, Equatable {
 	case usd
 	case sek
 	var prefix: String? {

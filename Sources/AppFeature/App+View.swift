@@ -9,57 +9,74 @@ import Foundation
 import SwiftUI
 import Backend
 
-public struct AppView: SwiftUI.View {
-	@State var reportState: ReportLoadState = .new
-	@State var lastFetched: Date?
-	var report: Report? {
-		guard case let .loaded(report) = reportState else { return nil }
-		return report
+enum LoadSource {
+	case file(URL)
+	case profile(Profile)
+	static func report(_ report: Report) -> Self {
+		.profile(report.profile)
 	}
+}
+
+public struct AppView: SwiftUI.View {
+	@State var booted: Bool = false
+	@State var timeStampedReport: CachedReport? = nil
+	@State var loadSource: LoadSource? = nil
+	@State var errorMessage: String? = nil
+	var isLoading: Bool {
+		loadSource != nil
+	}
+	var report: Report? {
+		timeStampedReport?.report
+	}
+	var lastFetched: Date? {
+		timeStampedReport?.timestamp
+	}
+	
 	public init() {}
+	var selectFile: Bool {
+		if timeStampedReport != nil {
+			return false
+		}
+		if isLoading {
+			return false
+		}
+		if errorMessage != nil {
+			return false
+		}
+		return booted
+	}
+	
 	public var body: some SwiftUI.View {
 		NavigationStack {
 			ScrollView {
 				VStack {
-					switch reportState {
-					case .new:
-						Button("Select file") {
-							reportState = .selectFile
-						}
-					case .selectFile:
-						Text("Selecting file...")
-							.fileImporter(
-								isPresented: .init(projectedValue: $reportState.mappingBinding(
-									transformGet: { $0.isSelectFile },
-									transformSet: { isSelectFile in
-										return isSelectFile ? .selectFile : .new
-									})),
-								allowedContentTypes: [.json]) { result in
-									switch result {
-									case let .success(fileULR):
-										reportState = .loading(fileULR)
-									case let .failure(error):
-										reportState = .failed(error)
-									}
-								}
-					case let .loaded(report):
+					if isLoading {
+						Text("Fetching...")
+					}
+					if let report {
 						content(report: report)
-					case let .loading(fileURL):
-						VStack {
-							Text("Updating...")
-							ProgressView()
-							contentOrEmpty
-						}
-						.task {
-							await _fetchAndUpdate(fileURL: fileURL)
-						}
-					case let .failed(error):
-						Text("Failed to load: \(String(describing: error))")
+					} else if let errorMessage {
+						Text("Failed: \(errorMessage)")
+					} else if selectFile {
+						Text("Select file")
+						.fileImporter(
+							isPresented: .constant(selectFile),
+							allowedContentTypes: [.json]) { result in
+								switch result {
+								case let .success(fileURL):
+									Task {
+										await _fetchAndUpdate(fileURL: fileURL)
+									}
+								case let .failure(error):
+									errorMessage = "Failed to open file, error: \(String(describing: error))"
+								}
+							}
 					}
 				}
 				.onAppear {
 					Task {
 						await fetchIfNeeded()
+						booted = true
 					}
 				}
 				.padding()
@@ -72,50 +89,42 @@ public struct AppView: SwiftUI.View {
 	}
 	
 	@ViewBuilder
-	var contentOrEmpty: some View {
-		if let report {
-			content(report: report)
-		}
-	}
-	
-	@ViewBuilder
 	func content(report: Report) -> some View {
 		if let lastFetched {
 			Text("\(lastFetched.secondsAgo) seconds ago")
+			#if os(macOS)
+			Button("Force fetch") {
+				Task {
+					await fetchIfNeeded(force: true)
+				}
+			}
+			#endif
 		}
 		ReportView(report: report)
 	}
 	
+	var reportOrCached: CachedReport? {
+		timeStampedReport ?? UserDefaults.standard.cachedReport
+	}
 	
-
 	private func fetchIfNeeded(force: Bool = false) async {
+		guard let reportOrCached else {
+			errorMessage = "Unable to fetch, no source profile..."
+			return
+		}
+		
+		timeStampedReport = reportOrCached
+		
 		if !force && hasRelevantData {
 			return // we have data, and it is not to old
 		}
 		
-		if let cachedReport = UserDefaults.standard.cachedReport {
-			reportState = .loaded(cachedReport.report)
-			lastFetched = cachedReport.timestamp
-			if force || !cachedReport.timestamp.wasRecent {
-				// was old, refetch
-				await _fetchAndUpdate(report: cachedReport.report)
-			}
-		} else {
-			switch reportState {
-			case let .loaded(report):
-				if force || lastFetched?.wasRecent == false {
-					// was old, fefetch
-					await _fetchAndUpdate(report: report)
-				}
-			default:
-				break
-			}
-		}
-
-
+		// Should update
+		await _fetchAndUpdate(report: reportOrCached.report)
 	}
 	
 	private func _fetchAndUpdate(fileURL: URL) async {
+		loadSource = .file(fileURL)
 		await __fetchUpdate {
 			try await Olympia.aggregate(
 				fiat: UserDefaults.defaultFiat,
@@ -126,10 +135,12 @@ public struct AppView: SwiftUI.View {
 	
 	
 	private func _fetchAndUpdate(report: Report) async {
+		loadSource = .report(report)
 		await _fetchAndUpdate(profile: report.profile)
 	}
 	
 	private func _fetchAndUpdate(profile: Profile) async {
+		loadSource = .profile(profile)
 		await __fetchUpdate {
 			try await Olympia.aggregate(fiat: UserDefaults.defaultFiat, profile: profile)
 		}
@@ -138,23 +149,24 @@ public struct AppView: SwiftUI.View {
 
 	
 	private func __fetchUpdate(_ fetch: () async throws -> Report) async {
+		defer { loadSource = nil }
 		do {
 			let report = try await fetch()
 			let timestamp = Date.now
 			let cached = CachedReport(report: report, timestamp: timestamp)
 			UserDefaults.standard.saveCached(cached)
-			reportState = .loaded(report)
-			lastFetched = timestamp
+			timeStampedReport = cached
+			errorMessage = nil
 		} catch {
-			reportState = .failed(error)
+			errorMessage = "Failed fetch or save report, error: \(error)"
 		}
 	}
 	
 	var hasRelevantData: Bool {
-		if report != nil, let lastFetched, lastFetched.wasRecent {
-			return true
+		guard let timeStampedReport else {
+			return false
 		}
-		return false
+		return timeStampedReport.timestamp.wasRecent
 	}
 }
 
@@ -208,26 +220,6 @@ extension Binding {
 
 extension UserDefaults {
 	static let defaultFiat: Fiat = .sek
-	var profileURL: URL? {
-		guard let urlString = string(forKey: profileFilePathKey) else {
-			return nil
-		}
-		return URL(string: urlString)
-	}
-	func setProfilePath(_ path: URL) {
-		setValue(path.absoluteString, forKey: profileFilePathKey)
-	}
-	
-	var lastFetched: Date? {
-		guard case let timestamp = double(forKey: lastFetchedKey), timestamp > 0 else {
-			return nil
-		}
-		return Date.init(timeIntervalSince1970: timestamp)
-	}
-	
-	func setLastFetched(_ date: Date = .now) {
-		setValue(date.timeIntervalSince1970, forKey: lastFetchedKey)
-	}
 	
 	var cachedReport: CachedReport? {
 		guard let data = data(forKey: cachedReportKey) else {
@@ -257,6 +249,4 @@ struct CachedReport: Codable {
 }
 
 
-let profileFilePathKey = "profileFilePathKey"
-let lastFetchedKey = "lastFetchedKey"
 let cachedReportKey = "cachedReportKey"

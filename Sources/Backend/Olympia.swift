@@ -10,6 +10,8 @@ let aggThresholdXRDAmount = BigDecimal(3000)
 public enum Olympia {}
 extension Olympia {
 	
+	@available(iOS, unavailable, message: "No home dir in iOS")
+	@available(macOS 13, *)
 	public static func aggregate(
 		fiat: Fiat,
 		profile profilePath: String = ".profile.json",

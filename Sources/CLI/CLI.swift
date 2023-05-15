@@ -14,10 +14,10 @@ struct CLI {
 		let separator = "~~~ √  Radix Aggregated Balances √ ~~~"
 		print("\n\n\n" + separator)
 		if let legacy = try? await Olympia.aggregate(fiat: fiat, profilePath: ".profile.legacy.json", optional: true) {
-			print("\nLEGACY:\n\(legacy.descriptionOrIngored(fiat: fiat))\n")
+			print("\nLEGACY:\n\(legacy.descriptionOrIgnored(fiat: fiat))\n")
 		}
 		let babylonReady = try await Olympia.aggregate(fiat: fiat, profilePath: ".profile.json")
-		print("BABYLON:\n\(babylonReady.descriptionOrIngored(fiat: fiat))")
+		print("BABYLON:\n\(babylonReady.descriptionOrIgnored(fiat: fiat))")
 		print("\n" + separator + "\n\n\n")
 	}
 }

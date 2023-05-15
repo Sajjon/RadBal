@@ -148,7 +148,7 @@ extension Report {
 			.joined(separator: "\n")
 	}
 	
-	public func descriptionOrIngored(fiat: Fiat) -> String {
+	public func descriptionOrIgnored(fiat: Fiat) -> String {
 		guard let detailedDescription = detailed(fiat: fiat) else {
 			return "Profile: '\(name)' has not enough value."
 		}

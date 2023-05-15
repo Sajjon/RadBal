@@ -194,14 +194,6 @@ enum ReportLoadState {
 	}
 }
 
-struct ReportView: SwiftUI.View {
-	let report: Report
-	var body: some View {
-		Text("\(report.descriptionOrIngored(fiat: UserDefaults.defaultFiat))")
-	}
-}
-
-
 extension Binding {
 	func mappingBinding<NewValue>(
 		transformGet: @escaping (Value) -> NewValue,

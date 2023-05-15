@@ -27,7 +27,7 @@ extension Olympia {
 		optional: Bool = false
 	) async throws -> Report {
 
-		guard url.startAccessingSecurityScopedResource() else { // Notice this line right here
+		guard url.startAccessingSecurityScopedResource() else {
 			print("Failed to startAccessingSecurityScopedResource")
 			struct UnableToStartAccessingSecurityScopedResource: Error {}
 			throw UnableToStartAccessingSecurityScopedResource()

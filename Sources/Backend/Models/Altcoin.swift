@@ -56,17 +56,17 @@ extension AltcoinBalance {
 }
 
 extension BigDecimal {
-	var amountOfXRDFormat: String {
+	public var amountOfXRDFormat: String {
 		format(style: .amountOfXRD)
 	}
 
-	var valueInXRDFormat: String {
+	public var valueInXRDFormat: String {
 		format(style: .valueInXRD)
 	}
-	var amountOfAltcoinFormat: String {
+	public var amountOfAltcoinFormat: String {
 		format(style: .amountOfAltcoin)
 	}
-	var roiFormat: String {
+	public var roiFormat: String {
 		if self > BigDecimal.ONE {
 			let diff =  self - BigDecimal.ONE
 			return "+\(diff.format(style: .percentage))"
@@ -78,7 +78,7 @@ extension BigDecimal {
 		}
 	}
 	
-	enum Style {
+	public enum Style {
 		case amountOfXRD
 		case valueInXRD
 		case valueInFiat(Fiat)
@@ -104,7 +104,7 @@ extension BigDecimal {
 			}
 		}
 	}
-	func format(style: Style) -> String {
+	public func format(style: Style) -> String {
 		let rounded = round(style: style)
 		let stringified = rounded.asString(.PLAIN)
 		return [style.prefix, stringified, style.suffix].compactMap { $0 }.joined()

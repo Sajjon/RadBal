@@ -12,11 +12,11 @@ enum Aggregator {}
 extension Aggregator {
 	
 	
-	static func detailedAccountInfo(_ account: Profile.Account) async throws -> ProfileFetched.Account {
+	static func detailedAccountInfo(_ account: Profile.Account) async throws -> Report.Account {
 		let tokenBalances = try await RadixDLTGateway.getBalanceOfAccount(address: account.address)
 		
 		guard !tokenBalances.altCoinsBalances.isEmpty else {
-			return ProfileFetched.Account(
+			return Report.Account(
 				account: account,
 				xrdLiquid: tokenBalances.xrdLiquid,
 				xrdStaked: tokenBalances.xrdStaked,
@@ -41,7 +41,7 @@ extension Aggregator {
 				)
 			}
 		
-		let fetchedAccount = ProfileFetched.Account(
+		let fetchedAccount = Report.Account(
 			account: account,
 			xrdLiquid: tokenBalances.xrdLiquid,
 			xrdStaked: tokenBalances.xrdStaked,
@@ -50,10 +50,10 @@ extension Aggregator {
 		return fetchedAccount
 	}
 	
-	static func of(profile: Profile, fiat: Fiat) async throws -> ProfileFetched {
+	static func of(profile: Profile, fiat: Fiat) async throws -> Report {
 		let accounts = try await profile.accounts.asyncMap { try await Self.detailedAccountInfo($0) }
 		let xrdValueInSelectedFiat = try await Self.priceOfXRD(in: fiat)
-		return ProfileFetched(
+		return Report(
 			name: profile.name,
 			accounts: accounts,
 			xrdValueInSelectedFiat: xrdValueInSelectedFiat

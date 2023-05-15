@@ -20,6 +20,7 @@
 		4834A4BD2A1113F2007EC76E /* Olympia.entitlements */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.plist.entitlements; path = Olympia.entitlements; sourceTree = "<group>"; };
 		4834A4BF2A1113F2007EC76E /* OlympiaApp.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = OlympiaApp.swift; sourceTree = "<group>"; };
 		4834A4C72A111469007EC76E /* RadBal */ = {isa = PBXFileReference; lastKnownFileType = wrapper; name = RadBal; path = ..; sourceTree = "<group>"; };
+		4834A4CD2A114FEC007EC76E /* Olympia-Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist; path = "Olympia-Info.plist"; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -37,6 +38,7 @@
 		4834A49F2A111390007EC76E = {
 			isa = PBXGroup;
 			children = (
+				4834A4CD2A114FEC007EC76E /* Olympia-Info.plist */,
 				4834A4C62A111469007EC76E /* Packages */,
 				4834A4BC2A1113F2007EC76E /* Assets.xcassets */,
 				4834A4BD2A1113F2007EC76E /* Olympia.entitlements */,
@@ -290,6 +292,7 @@
 				ENABLE_HARDENED_RUNTIME = YES;
 				ENABLE_PREVIEWS = YES;
 				GENERATE_INFOPLIST_FILE = YES;
+				INFOPLIST_FILE = "Olympia-Info.plist";
 				"INFOPLIST_KEY_UIApplicationSceneManifest_Generation[sdk=iphoneos*]" = YES;
 				"INFOPLIST_KEY_UIApplicationSceneManifest_Generation[sdk=iphonesimulator*]" = YES;
 				"INFOPLIST_KEY_UIApplicationSupportsIndirectInputEvents[sdk=iphoneos*]" = YES;
@@ -330,6 +333,7 @@
 				ENABLE_HARDENED_RUNTIME = YES;
 				ENABLE_PREVIEWS = YES;
 				GENERATE_INFOPLIST_FILE = YES;
+				INFOPLIST_FILE = "Olympia-Info.plist";
 				"INFOPLIST_KEY_UIApplicationSceneManifest_Generation[sdk=iphoneos*]" = YES;
 				"INFOPLIST_KEY_UIApplicationSceneManifest_Generation[sdk=iphonesimulator*]" = YES;
 				"INFOPLIST_KEY_UIApplicationSupportsIndirectInputEvents[sdk=iphoneos*]" = YES;

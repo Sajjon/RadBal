@@ -12,13 +12,21 @@ extension Olympia {
 	
 	public static func aggregate(
 		fiat: Fiat,
-		profile profilePath: String,
+		profile profilePath: String = ".profile.json",
 		optional: Bool = false
-	) async throws -> ProfileFetched {
+	) async throws -> Report {
 		let url: URL = FileManager.default.homeDirectoryForCurrentUser.appending(path: profilePath)
+		return try await aggregate(fiat: fiat, profileURL: url, optional: optional)
+	}
+	
+	public static func aggregate(
+		fiat: Fiat,
+		profileURL url: URL,
+		optional: Bool = false
+	) async throws -> Report {
 		guard let profileData = try? Data(contentsOf: url) else {
 			if !optional {
-				print("Missing '\(profilePath)', create the file and place it in the root of the project.")
+				print("Missing '\(url)', create the file and place it in the root of the project.")
 			}
 			struct MissingFile: Error {}
 			throw MissingFile()

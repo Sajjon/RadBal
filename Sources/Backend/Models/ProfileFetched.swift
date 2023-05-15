@@ -8,7 +8,7 @@
 import Foundation
 import BigDecimal
 
-public struct ProfileFetched {
+public struct Report {
 	
 	/// Name of "Profile" / "wallet"
 	public let name: String
@@ -25,7 +25,7 @@ public struct ProfileFetched {
 	}
 }
 
-extension ProfileFetched {
+extension Report {
 	public struct Account: Hashable {
 		
 		let account: Profile.Account
@@ -48,7 +48,7 @@ extension ProfileFetched {
 	}
 }
 
-extension ProfileFetched.Account {
+extension Report.Account {
 	
 	public var hasAltcoinValueAboveThreshold: Bool {
 		!altcoinBalances.isEmpty
@@ -64,7 +64,7 @@ extension ProfileFetched.Account {
 
 }
 
-extension ProfileFetched {
+extension Report {
 	public var xrdLiquid: BigDecimal {
 		accounts.reduce(BigDecimal(0)) { $0 + $1.xrdLiquid }
 	}

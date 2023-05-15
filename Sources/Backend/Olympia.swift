@@ -26,13 +26,21 @@ extension Olympia {
 		profileURL url: URL,
 		optional: Bool = false
 	) async throws -> Report {
-		guard let profileData = try? Data(contentsOf: url) else {
-			if !optional {
-				print("Missing '\(url)', create the file and place it in the root of the project.")
-			}
-			struct MissingFile: Error {}
-			throw MissingFile()
+
+		guard url.startAccessingSecurityScopedResource() else { // Notice this line right here
+			print("Failed to startAccessingSecurityScopedResource")
+			struct UnableToStartAccessingSecurityScopedResource: Error {}
+			throw UnableToStartAccessingSecurityScopedResource()
 		}
+		
+		let profileData: Data
+		do {
+			profileData = try Data(contentsOf: url)
+		} catch {
+			print("Unable to read file at path: \(url), error: \(String(describing: error))")
+			throw error
+		}
+		 
 		let jsonDecoder = JSONDecoder()
 		jsonDecoder.dateDecodingStrategy = .iso8601
 		let profile = try jsonDecoder.decode(Profile.self, from: profileData)

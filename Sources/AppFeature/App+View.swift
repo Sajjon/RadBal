@@ -40,9 +40,6 @@ public struct AppView: SwiftUI.View {
 		if isLoading {
 			return false
 		}
-		if errorMessage != nil {
-			return false
-		}
 		return booted
 	}
 	
@@ -109,7 +106,6 @@ public struct AppView: SwiftUI.View {
 	
 	private func fetchIfNeeded(force: Bool = false) async {
 		guard let reportOrCached else {
-			errorMessage = "Unable to fetch, no source profile..."
 			return
 		}
 		

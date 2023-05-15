@@ -14,7 +14,7 @@ extension Olympia {
 	@available(macOS 13, *)
 	public static func aggregate(
 		fiat: Fiat,
-		profile profilePath: String = ".profile.json",
+		profilePath: String = ".profile.json",
 		optional: Bool = false
 	) async throws -> Report {
 		let url: URL = FileManager.default.homeDirectoryForCurrentUser.appending(path: profilePath)
@@ -36,9 +36,15 @@ extension Olympia {
 		let jsonDecoder = JSONDecoder()
 		jsonDecoder.dateDecodingStrategy = .iso8601
 		let profile = try jsonDecoder.decode(Profile.self, from: profileData)
-		return try await Aggregator.of(profile: profile, fiat: fiat)
+		return try await aggregate(fiat: fiat, profile: profile)
 	}
 	
+	public static func aggregate(
+		fiat: Fiat,
+		profile: Profile
+	) async throws -> Report {
+		try await Aggregator.of(profile: profile, fiat: fiat)
+	}
 }
 					
 		

@@ -8,11 +8,23 @@
 import Foundation
 import BigDecimal
 
-struct AltcoinBalance: Hashable {
-	let balance: BigDecimal
-	let price: PriceInfo
-	let tokenInfo: TokenInfo
-	let purchase: Profile.Account.Trade?
+extension BigDecimal: Codable {
+	public func encode(to encoder: Encoder) throws {
+		var singleValueContainer = encoder.singleValueContainer()
+		try singleValueContainer.encode(self.asString(.PLAIN))
+	}
+	public init(from decoder: Decoder) throws {
+		let singleValuecontainer = try decoder.singleValueContainer()
+		let string = try singleValuecontainer.decode(String.self)
+		self.init(string)
+	}
+}
+
+public struct AltcoinBalance: Hashable, Codable {
+	public let balance: BigDecimal
+	public let price: PriceInfo
+	public let tokenInfo: TokenInfo
+	public let purchase: Trade?
 }
 
 extension AltcoinBalance {

@@ -54,7 +54,7 @@ extension Aggregator {
 		let accounts = try await profile.accounts.asyncMap { try await Self.detailedAccountInfo($0) }
 		let xrdValueInSelectedFiat = try await Self.priceOfXRD(in: fiat)
 		return Report(
-			name: profile.name,
+			profile: profile,
 			accounts: accounts,
 			xrdValueInSelectedFiat: xrdValueInSelectedFiat
 		)

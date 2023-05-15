@@ -8,9 +8,8 @@
 import Foundation
 import BigDecimal
 
-
-struct PriceInfo: Hashable {
-	let rri: String
-	let inUSD: BigDecimal
-	let inXRD: BigDecimal
+public struct PriceInfo: Hashable, Codable {
+	public let rri: String
+	public let inUSD: BigDecimal
+	public let inXRD: BigDecimal
 }

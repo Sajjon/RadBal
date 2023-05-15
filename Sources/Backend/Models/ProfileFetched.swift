@@ -8,25 +8,27 @@
 import Foundation
 import BigDecimal
 
-public struct Report {
+public struct Report: Codable {
 	
-	/// Name of "Profile" / "wallet"
-	public let name: String
+	public let profile: Profile
+	public var name: String {
+		profile.name
+	}
 	
 	/// All accounts associated with this profile/wallet.
 	public let accounts: [Account]
 	
 	public let xrdValueInSelectedFiat: BigDecimal
 	
-	public init(name: String, accounts: [Account], xrdValueInSelectedFiat: BigDecimal) {
-		self.name = name
+	public init(profile: Profile, accounts: [Account], xrdValueInSelectedFiat: BigDecimal) {
+		self.profile = profile
 		self.accounts = accounts
 		self.xrdValueInSelectedFiat = xrdValueInSelectedFiat
 	}
 }
 
 extension Report {
-	public struct Account: Hashable {
+	public struct Account: Hashable, Codable {
 		
 		let account: Profile.Account
 		let xrdLiquid: BigDecimal

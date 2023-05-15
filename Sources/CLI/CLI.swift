@@ -7,8 +7,13 @@
 
 import Backend
 
+@available(iOS, unavailable, message: "No home dir in iOS")
+@available(macOS 13, *)
 @main
 struct CLI {
+	
+	@available(iOS, unavailable, message: "No home dir in iOS")
+	@available(macOS 13, *)
 	public static func main() async throws {
 		let fiat: Fiat = .sek
 		let separator = "~~~ √  Radix Aggregated Balances √ ~~~"

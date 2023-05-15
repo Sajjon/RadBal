@@ -11,8 +11,9 @@ import SwiftUI
 
 struct ReportView: SwiftUI.View {
 	let report: Report
+	let fiat: Fiat
 	var body: some View {
-		Text("\(report.descriptionOrIgnored(fiat: UserDefaults.defaultFiat))")
+		Text("\(report.descriptionOrIgnored(fiat: fiat))")
 	}
 }
 

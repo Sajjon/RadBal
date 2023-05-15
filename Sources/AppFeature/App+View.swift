@@ -97,7 +97,7 @@ public struct AppView: SwiftUI.View {
 			}
 			#endif
 		}
-		ReportView(report: report)
+		ReportView(report: report, fiat: UserDefaults.standard.fiat)
 	}
 	
 	var reportOrCached: CachedReport? {
@@ -123,7 +123,7 @@ public struct AppView: SwiftUI.View {
 		loadSource = .file(fileURL)
 		await __fetchUpdate {
 			try await Olympia.aggregate(
-				fiat: UserDefaults.defaultFiat,
+				fiat: UserDefaults.standard.fiat,
 				profileURL: fileURL
 			)
 		}
@@ -138,7 +138,7 @@ public struct AppView: SwiftUI.View {
 	private func _fetchAndUpdate(profile: Profile) async {
 		loadSource = .profile(profile)
 		await __fetchUpdate {
-			try await Olympia.aggregate(fiat: UserDefaults.defaultFiat, profile: profile)
+			try await Olympia.aggregate(fiat: UserDefaults.standard.fiat, profile: profile)
 		}
 	}
 	
@@ -207,7 +207,9 @@ extension Binding {
 }
 
 extension UserDefaults {
-	static let defaultFiat: Fiat = .sek
+	var fiat: Fiat {
+		Fiat(rawValue: string(forKey: fiatKey) ?? "not_set") ?? .sek
+	}
 	
 	var cachedReport: CachedReport? {
 		guard let data = data(forKey: cachedReportKey) else {
@@ -238,3 +240,4 @@ struct CachedReport: Codable {
 
 
 let cachedReportKey = "cachedReportKey"
+let fiatKey = "fiatKey"

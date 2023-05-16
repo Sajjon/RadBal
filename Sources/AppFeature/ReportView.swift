@@ -59,14 +59,14 @@ extension ReportView {
 							ForEach(account.altcoinBalances, id: \.self) { altBal in
 								HStack {
 									Text(altBal.returnOnInvestment.map { $0.goodInvestment ? "📈" : "📉" } ?? "🆓")
-								
+									
 									Text("`\(altBal.tokenInfo.symbol.uppercased())`")
 										.font(.ubuntu(20))
 									
 									Group {
 										Text(altBal.amountOfAltcoinWithPurchaseIfAny)
 										Text(altBal.worthInXRD.amountOfXRDFormat)
-//										Text(altBal.worth(in: self.report.usdValueInSelectedFiat).format(style: .valueInFiat(fiat)))
+										//										Text(altBal.worth(in: self.report.usdValueInSelectedFiat).format(style: .valueInFiat(fiat)))
 									}.font(.body)
 									
 									if let roi = altBal.returnOnInvestment {
@@ -106,20 +106,22 @@ extension ReportView {
 								HPair("ALTs", xrd: account.xrdValueOfAllAltCoins)
 							}
 							
-							if let scorpionBalance = account.altcoinBalances.first(where: { $0.tokenInfo.isScorpionNFT }) {
-								let limit = 5
-								let char = "🦂"
-								let numberOfScorpionsOwned = Int(scorpionBalance.balance.asDouble())
-								if numberOfScorpionsOwned <= limit  {
-									Text(String(repeating: char, count: numberOfScorpionsOwned))
-								} else {
-									Text("\(char): #\(numberOfScorpionsOwned)")
-								}
-							}
-							
 							if account.xrdStaked <= thresholdXRDAmount && account.xrdValueOfAllAltCoins <= thresholdXRDAmount && account.xrdValueOfAllAltCoins.isZero {
 								Text("No balance yet.")
 							}
+						}
+						if let scorpionBalance = account.altcoinBalances.first(where: { $0.tokenInfo.isScorpionNFT }) {
+							let limit = 7
+							let char = "🦂 "
+							let numberOfScorpionsOwned = Int(scorpionBalance.balance.asDouble())
+							Group {
+								if numberOfScorpionsOwned <= limit  {
+									Text(String(repeating: char, count: numberOfScorpionsOwned))
+								} else {
+									Text("\(char) #\(numberOfScorpionsOwned)")
+								}
+							}
+							.font(.ubuntu(40))
 						}
 					}
 				}
@@ -166,7 +168,7 @@ struct HPair: View {
 	init<Value>(_ title: String, _ value: Value) where Value: CustomStringConvertible {
 		self.init(title, value: String(describing: value))
 	}
-				
+	
 	init(_ title: String, xrd: BigDecimal) {
 		self.init(title, value: xrd.amountOfXRDFormat)
 	}
@@ -174,7 +176,7 @@ struct HPair: View {
 	init(_ title: String, fiat: BigDecimal) {
 		self.init(title, value: fiat.format(style: .valueInFiat(UserDefaults.standard.fiat)))
 	}
-				
+	
 	var body: some View {
 		HStack {
 			Text(title)

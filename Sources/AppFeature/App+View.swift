@@ -88,7 +88,7 @@ public struct AppView: SwiftUI.View {
 	@ViewBuilder
 	func content(report: Report) -> some View {
 		if let lastFetched {
-			Text("\(lastFetched.secondsAgo) seconds ago")
+			Text("\(lastFetched.timeAgo)")
 				.font(.caption2)
 			#if os(macOS)
 			Button("Force fetch") {
@@ -170,11 +170,42 @@ public struct AppView: SwiftUI.View {
 
 struct FailedToFetchReport: Error {}
 
+extension Optional<Int> {
+	var ifNonZero: Int? {
+		guard let self, self > 0 else {
+			return nil
+		}
+		return self
+	}
+}
+
 extension Date {
 	
 	var secondsAgo: Int {
-		let diffComponents = Calendar.current.dateComponents([.minute, .second], from: self, to: .now)
-		return diffComponents.second ?? 0
+		let (_, _, minutes, seconds) = timeAgo()
+		return (minutes ?? 0) * 60 + (seconds ?? 0)
+	}
+	
+	var timeAgo: String {
+		let (days, hours, minutes, seconds) = timeAgo()
+		let dhm = Array<String?>([
+			days.ifNonZero.map { "\($0) days" },
+			hours.ifNonZero.map { "\($0) hours" },
+			minutes.ifNonZero.map { "\($0) minutes" },
+		]).compactMap { $0 }.joined(separator: ", ")
+		let condAnd = dhm.isEmpty ? "" : " and "
+		
+		return "\(dhm)\(condAnd)\(seconds ?? 0) seconds ago."
+	}
+	
+	func timeAgo(_ to: Date = .now) -> (days: Int?, hours: Int?, minutes: Int?, seconds: Int?) {
+		let diffComponents = Calendar.current.dateComponents([.day, .hour, .minute, .second], from: self, to: to)
+		return (
+			days: diffComponents.day,
+			hours: diffComponents.hour,
+			minutes: diffComponents.minute,
+			seconds: diffComponents.second
+		)
 	}
 	
 	var wasRecent: Bool {

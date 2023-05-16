@@ -81,6 +81,38 @@ extension ReportView {
 					}
 				}
 			}
+			
+			Text("All accounts")
+				.font(.ubuntu(40))
+			
+			LazyVStack(alignment: .leading, spacing: 32) {
+				ForEach(accounts, id: \.self) { account in
+					VStack(alignment: .leading, spacing: 8) {
+						
+						HPair(
+							account.account.nameOrIndex,
+							value: "`\(account.account.shortAddress)`"
+						)
+						.font(.ubuntu(30))
+						HStack {
+							if account.xrdStaked > thresholdXRDAmount {
+								HPair("Staked", xrd: account.xrdStaked)
+									.font(.ubuntu(20))
+							}
+							if account.xrdValueOfAllAltCoins > thresholdXRDAmount {
+								HPair("Liquid", xrd: account.xrdLiquid)
+							}
+							if account.xrdValueOfAllAltCoins > BigDecimal.ZERO {
+								HPair("ALTs", xrd: account.xrdValueOfAllAltCoins)
+							}
+							
+							if account.xrdStaked <= thresholdXRDAmount && account.xrdValueOfAllAltCoins <= thresholdXRDAmount && account.xrdValueOfAllAltCoins.isZero {
+								Text("No balance yet.")
+							}
+						}
+					}
+				}
+			}
 		}
 	}
 }

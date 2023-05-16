@@ -79,7 +79,7 @@ public struct AppView: SwiftUI.View {
 				.padding()
 			}
 			.refreshable {
-				await fetchIfNeeded(force: true)
+				await fetchIfNeeded(pulledToRefresh: true)
 			}
 			.navigationTitle(self.report?.name ?? "Select profile")
 		}
@@ -106,19 +106,25 @@ public struct AppView: SwiftUI.View {
 		timeStampedReport ?? UserDefaults.standard.cachedReport
 	}
 	
-	private func fetchIfNeeded(force: Bool = false) async {
+	private func fetchIfNeeded(pulledToRefresh: Bool = false) async {
+		let force = pulledToRefresh
 		guard let reportOrCached else {
 			return
 		}
 		
-		timeStampedReport = reportOrCached
+		if timeStampedReport == nil {
+			timeStampedReport = reportOrCached			
+		}
 		
 		if !force && hasRelevantData {
 			return // we have data, and it is not to old
 		}
 		
 		// Should update
-		await _fetchAndUpdate(report: reportOrCached.report)
+		await _fetchAndUpdate(
+			profile: reportOrCached.report.profile,
+			pulledToRefresh: pulledToRefresh
+		)
 	}
 	
 	private func _fetchAndUpdate(fileURL: URL) async {
@@ -131,23 +137,26 @@ public struct AppView: SwiftUI.View {
 		}
 	}
 	
+
 	
-	private func _fetchAndUpdate(report: Report) async {
-		loadSource = .report(report)
-		await _fetchAndUpdate(profile: report.profile)
-	}
-	
-	private func _fetchAndUpdate(profile: Profile) async {
-		loadSource = .profile(profile)
+	private func _fetchAndUpdate(profile: Profile, pulledToRefresh: Bool) async {
+		if !pulledToRefresh {
+			// we are not allowed to modify state => redraw => cancel fetch, see:
+			// https://stackoverflow.com/a/74977961
+			loadSource = .profile(profile)
+		}
 		await __fetchUpdate {
-			try await Olympia.aggregate(fiat: UserDefaults.standard.fiat, profile: profile)
+			return try await Olympia.aggregate(fiat: UserDefaults.standard.fiat, profile: profile)
 		}
 	}
 	
 
 	
 	private func __fetchUpdate(_ fetch: () async throws -> Report) async {
-		defer { loadSource = nil }
+		defer {
+			loadSource = nil
+			
+		}
 		do {
 			let report = try await fetch()
 			let timestamp = Date.now
@@ -156,6 +165,7 @@ public struct AppView: SwiftUI.View {
 			timeStampedReport = cached
 			errorMessage = nil
 		} catch {
+			print("❌ Failed fetch or save report, error: \(error)")
 			errorMessage = "Failed fetch or save report, error: \(error)"
 		}
 	}
@@ -183,11 +193,20 @@ extension Date {
 	
 	var secondsAgo: Int {
 		let (_, _, minutes, seconds) = timeAgo()
-		return (minutes ?? 0) * 60 + (seconds ?? 0)
+		return _seconds(seconds, minutes: minutes)
+	}
+	
+	private func _seconds(_ seconds: Int?, minutes: Int?) -> Int {
+		(minutes ?? 0) * 60 + (seconds ?? 0)
 	}
 	
 	var timeAgo: String {
 		let (days, hours, minutes, seconds) = timeAgo()
+		
+		if _seconds(seconds, minutes: minutes) < 3 {
+			return "Just now."
+		}
+		
 		let dhm = Array<String?>([
 			days.ifNonZero.map { "\($0) days" },
 			hours.ifNonZero.map { "\($0) hours" },
@@ -209,7 +228,11 @@ extension Date {
 	}
 	
 	var wasRecent: Bool {
+		#if DEBUG
+		secondsAgo < 5
+		#else
 		secondsAgo < 60
+		#endif
 	}
 }
 

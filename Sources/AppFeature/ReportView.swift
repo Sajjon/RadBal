@@ -106,6 +106,17 @@ extension ReportView {
 								HPair("ALTs", xrd: account.xrdValueOfAllAltCoins)
 							}
 							
+							if let scorpionBalance = account.altcoinBalances.first(where: { $0.tokenInfo.isScorpionNFT }) {
+								let limit = 5
+								let char = "🦂"
+								let numberOfScorpionsOwned = Int(scorpionBalance.balance.asDouble())
+								if numberOfScorpionsOwned <= limit  {
+									Text(String(repeating: char, count: numberOfScorpionsOwned))
+								} else {
+									Text("\(char): #\(numberOfScorpionsOwned)")
+								}
+							}
+							
 							if account.xrdStaked <= thresholdXRDAmount && account.xrdValueOfAllAltCoins <= thresholdXRDAmount && account.xrdValueOfAllAltCoins.isZero {
 								Text("No balance yet.")
 							}

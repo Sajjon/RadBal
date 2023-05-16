@@ -8,11 +8,24 @@
 import Foundation
 import BigDecimal
 
+extension TokenInfo {
+	public var isScorpionNFT: Bool {
+		rri == .scorpionNFTRRI
+	}
+}
+extension String {
+	static let scorpionNFTRRI = "scorp_rr1qw7dxlwpzx6he6y63epva9fa6ry997n8svvh5m2dzkgshv0jh8"
+}
+
+
 enum Aggregator {}
 extension Aggregator {
 	
 	
-	static func detailedAccountInfo(_ account: Profile.Account) async throws -> Report.Account {
+	static func detailedAccountInfo(
+		_ account: Profile.Account,
+		xrdValueInUSD: BigDecimal
+	) async throws -> Report.Account {
 		let tokenBalances = try await RadixDLTGateway.getBalanceOfAccount(address: account.address)
 		
 		guard !tokenBalances.altCoinsBalances.isEmpty else {
@@ -28,7 +41,17 @@ extension Aggregator {
 			.altCoinsBalances
 			.asyncCompactMap { altcoinBalanceSimple -> AltcoinBalance? in
 				let rri = altcoinBalanceSimple.rri
-				guard let price = try await RadixScanClient.price(of: rri) else {
+				let realPriceOrNil = try await RadixScanClient.price(of: rri)
+				let priceOrNil: PriceInfo? = {
+					if altcoinBalanceSimple.rri == .scorpionNFTRRI {
+						// emulate a price of scorpions...
+						let emulatedXRDValue = BigDecimal(500)
+						let emulatedUSDValue = emulatedXRDValue.multiply(xrdValueInUSD, .decimal32)
+						return .init(rri: altcoinBalanceSimple.rri, inUSD: emulatedUSDValue, inXRD: emulatedXRDValue)
+					}
+					return realPriceOrNil
+				}()
+				guard let price = priceOrNil else {
 					return nil
 				}
 				let tokenInfo = try await RadixScanClient.info(of: rri)
@@ -45,20 +68,19 @@ extension Aggregator {
 			account: account,
 			xrdLiquid: tokenBalances.xrdLiquid,
 			xrdStaked: tokenBalances.xrdStaked,
-			altcoinBalances: altcoinBalances.filter { $0.worthInUSD > thresholdValueInUSD }
+			altcoinBalances: altcoinBalances.filter { $0.worthInUSD > thresholdValueInUSD || $0.tokenInfo.isScorpionNFT }
 		)
 		return fetchedAccount
 	}
 	
 	static func of(profile: Profile, fiat: Fiat) async throws -> Report {
-		let accounts = try await profile.accounts.asyncMap { try await Self.detailedAccountInfo($0) }
-		
 		let usdValueInSelectedFiat = try await BigDecimal(FiatCurrencyConverter.priceInUSD(of: fiat))
-		
 		let xrdValueInUSD = try await Self.priceOfXRDinUSD()
-		
 		let xrdValueInSelectedFiat = usdValueInSelectedFiat * xrdValueInUSD
-	
+
+		let accounts = try await profile.accounts.asyncMap { try await Self.detailedAccountInfo($0, xrdValueInUSD: xrdValueInUSD) }
+		
+
 		return Report(
 			profile: profile,
 			accounts: accounts,

@@ -51,7 +51,6 @@ extension Report {
 			xrdStaked: BigDecimal,
 			altcoinBalances: [AltcoinBalance]
 		) {
-			precondition(altcoinBalances.allSatisfy({ $0.worthInXRD > thresholdValueInUSD }))
 			self.account = account
 			self.xrdLiquid = xrdLiquid
 			self.xrdStaked = xrdStaked

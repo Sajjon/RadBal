@@ -178,7 +178,7 @@ struct HPair: View {
 	}
 	
 	var body: some View {
-		HStack {
+		HStack(spacing: 2) {
 			Text(title)
 			Text(value)
 		}

@@ -8,7 +8,7 @@
 import Foundation
 import BigDecimal
 
-public struct Profile: Codable {
+public struct Profile: Codable, Hashable {
 	
 	/// Name of "Profile" / "wallet"
 	public let name: String

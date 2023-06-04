@@ -288,10 +288,9 @@ extension UserDefaults {
 	}
 }
 
-struct CachedReport: Codable {
+struct CachedReport: Codable, Hashable {
 	let report: Report
 	let timestamp: Date
-
 }
 
 
